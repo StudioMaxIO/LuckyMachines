@@ -16,7 +16,7 @@ const luckyMachineSource = fs.readFileSync(luckyMachinePath, "utf8");
 var input = {
   language: "Solidity",
   sources: {
-    "SMProject.sol": {
+    "SMLuckyMachine.sol": {
       content: luckyMachineSource
     }
   },
