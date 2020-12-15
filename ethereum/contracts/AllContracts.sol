@@ -1,12 +1,5 @@
 pragma solidity ^0.6.0;
 
-//import "https://raw.githubusercontent.com/smartcontractkit/chainlink/master/evm-contracts/src/v0.6/VRFConsumerBase.sol";
-
-//import "./SafeMathChainlink.sol";
-//import "LinkTokenInterface.sol";
-//import "VRFRequestIDBase.sol";
-//import "VRFConsumerBase.sol";
-
 library SafeMathChainlink {
 
   function add(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -255,6 +248,11 @@ contract LuckyMachine is VRFConsumerBase {
         g.player.transfer(g.bet);
     }
 
+    function getSummary() public view returns(uint, uint, uint) {
+        //minBet, maxBet, payout
+        return(minBet, maxBet, payout);
+    }
+    
     // Owner Functions
 
     function fundMachine() public payable {

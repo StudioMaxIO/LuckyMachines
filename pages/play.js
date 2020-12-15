@@ -13,16 +13,41 @@ import {
 } from "semantic-ui-react";
 import Layout from "../components/Layout";
 import { Link, Router } from "../routes";
-import luckyMachine from "../ethereum/luckyMachine";
+import LuckyMachine from "../ethereum/luckyMachine";
 import web3 from "../ethereum/web3";
 
 class Play extends Component {
   state = {
     bet: 0,
     pick: 0,
+    gameIDInput: "",
+    checkGameLoading: false,
     loading: false,
     errorMessage: ""
   };
+
+  static async getInitialProps(props) {
+    //const project = Project(props.query.address);
+
+    this._isMounted = false;
+    const luckyMachine = LuckyMachine(props.query.address);
+    const summary = await luckyMachine.methods.getSummary().call();
+
+    return {
+      address: props.query.address,
+      minimumBet: summary[0],
+      maximumBet: summary[1],
+      payout: summary[2]
+    };
+  }
+
+  async componentDidMount() {
+    this._isMounted = true;
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
 
   onSubmit = async event => {
     event.preventDefault();
@@ -44,6 +69,12 @@ class Play extends Component {
     this.setState({ loading: false });
   };
 
+  checkGame = async event => {
+    event.preventDefault();
+
+    this.setState({ checkGameLoading: true, errorMessage: "" });
+  };
+
   render() {
     return (
       <Layout>
@@ -60,7 +91,32 @@ class Play extends Component {
             </h1>
           </Grid.Row>
           <Grid.Row color="black">
-            <p>Rules...</p>
+            <Grid.Column>
+              <center>
+                <p>
+                  Minimum Bet:
+                  <br />
+                  {web3.utils.fromWei(this.props.minimumBet, "ether")} ETH
+                </p>
+              </center>
+            </Grid.Column>
+            <Grid.Column>
+              <center>
+                <p>
+                  Maximum Bet:
+                  <br />
+                  {web3.utils.fromWei(this.props.maximumBet, "ether")} ETH
+                </p>
+              </center>
+            </Grid.Column>
+            <Grid.Column>
+              <center>
+                <p>
+                  Payout:
+                  <br /> {this.props.payout}X
+                </p>
+              </center>
+            </Grid.Column>
           </Grid.Row>
           <Grid.Row color="blue">
             <Form onSubmit={this.onSubmit} error={!!this.state.errorMessage}>
@@ -91,6 +147,32 @@ class Play extends Component {
                 Place Bet
               </Button>
             </Form>
+          </Grid.Row>
+        </Grid>
+        <Grid style={{ paddingTop: "10px" }}>
+          <Grid.Row centered columns={2}>
+            <Grid.Column color="black">
+              <center>
+                <Form onSubmit={this.checkGame}>
+                  <Form.Field>
+                    <Input
+                      placeholder="Game ID"
+                      value={this.state.gameIDInput}
+                      onChange={event =>
+                        this.setState({ tokenAddress: event.target.value })
+                      }
+                    />
+                  </Form.Field>
+                  <Button
+                    size="huge"
+                    color="teal"
+                    loading={this.state.checkGameLoading}
+                  >
+                    Check Game
+                  </Button>
+                </Form>
+              </center>
+            </Grid.Column>
           </Grid.Row>
         </Grid>
         <Grid style={{ paddingTop: "10px" }}>

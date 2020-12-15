@@ -145,6 +145,11 @@ contract LuckyMachine is VRFConsumerBase {
         g.player.transfer(g.bet);
     }
 
+    function getSummary() public view returns(uint, uint, uint) {
+        //minBet, maxBet, payout
+        return(minBet, maxBet, payout);
+    }
+
     // Owner Functions
 
     function fundMachine() public payable {
