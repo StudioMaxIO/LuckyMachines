@@ -1,12 +1,125 @@
-pragma solidity ^0.6.6;
+pragma solidity ^0.6.0;
 
-import "https://raw.githubusercontent.com/smartcontractkit/chainlink/master/evm-contracts/src/v0.6/VRFConsumerBase.sol";
+//import "https://raw.githubusercontent.com/smartcontractkit/chainlink/master/evm-contracts/src/v0.6/VRFConsumerBase.sol";
 
-contract LuckyMachine is VRFConsumerBase{
+//import "./SafeMathChainlink.sol";
+//import "LinkTokenInterface.sol";
+//import "VRFRequestIDBase.sol";
+//import "VRFConsumerBase.sol";
+
+library SafeMathChainlink {
+
+  function add(uint256 a, uint256 b) internal pure returns (uint256) {
+    uint256 c = a + b;
+    require(c >= a, "SafeMath: addition overflow");
+
+    return c;
+  }
+
+  function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+    require(b <= a, "SafeMath: subtraction overflow");
+    uint256 c = a - b;
+
+    return c;
+  }
+
+  function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+
+    if (a == 0) {
+      return 0;
+    }
+
+    uint256 c = a * b;
+    require(c / a == b, "SafeMath: multiplication overflow");
+
+    return c;
+  }
+
+  function div(uint256 a, uint256 b) internal pure returns (uint256) {
+    // Solidity only automatically asserts when dividing by 0
+    require(b > 0, "SafeMath: division by zero");
+    uint256 c = a / b;
+    // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+
+    return c;
+  }
+
+  function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+    require(b != 0, "SafeMath: modulo by zero");
+    return a % b;
+  }
+}
+
+contract VRFRequestIDBase {
+
+  function makeVRFInputSeed(bytes32 _keyHash, uint256 _userSeed,
+    address _requester, uint256 _nonce)
+    internal pure returns (uint256)
+  {
+    return  uint256(keccak256(abi.encode(_keyHash, _userSeed, _requester, _nonce)));
+  }
+
+  function makeRequestId(
+    bytes32 _keyHash, uint256 _vRFInputSeed) internal pure returns (bytes32) {
+    return keccak256(abi.encodePacked(_keyHash, _vRFInputSeed));
+  }
+}
+
+interface LinkTokenInterface {
+  function allowance(address owner, address spender) external view returns (uint256 remaining);
+  function approve(address spender, uint256 value) external returns (bool success);
+  function balanceOf(address owner) external view returns (uint256 balance);
+  function decimals() external view returns (uint8 decimalPlaces);
+  function decreaseApproval(address spender, uint256 addedValue) external returns (bool success);
+  function increaseApproval(address spender, uint256 subtractedValue) external;
+  function name() external view returns (string memory tokenName);
+  function symbol() external view returns (string memory tokenSymbol);
+  function totalSupply() external view returns (uint256 totalTokensIssued);
+  function transfer(address to, uint256 value) external returns (bool success);
+  function transferAndCall(address to, uint256 value, bytes calldata data) external returns (bool success);
+  function transferFrom(address from, address to, uint256 value) external returns (bool success);
+}
+
+abstract contract VRFConsumerBase is VRFRequestIDBase {
+
+  using SafeMathChainlink for uint256;
+
+  function fulfillRandomness(bytes32 requestId, uint256 randomness)
+    internal virtual;
+
+  function requestRandomness(bytes32 _keyHash, uint256 _fee, uint256 _seed)
+    internal returns (bytes32 requestId)
+  {
+    LINK.transferAndCall(vrfCoordinator, _fee, abi.encode(_keyHash, _seed));
+
+    uint256 vRFSeed  = makeVRFInputSeed(_keyHash, _seed, address(this), nonces[_keyHash]);
+
+    nonces[_keyHash] = nonces[_keyHash].add(1);
+    return makeRequestId(_keyHash, vRFSeed);
+  }
+
+  LinkTokenInterface internal LINK;
+  address private vrfCoordinator;
+
+  mapping(bytes32 /* keyHash */ => uint256 /* nonce */) public nonces;
+  constructor(address _vrfCoordinator, address _link) public {
+    vrfCoordinator = _vrfCoordinator;
+    LINK = LinkTokenInterface(_link);
+  }
+
+  function rawFulfillRandomness(bytes32 requestId, uint256 randomness) external {
+    require(msg.sender == vrfCoordinator, "Only VRFCoordinator can fulfill");
+    fulfillRandomness(requestId, randomness);
+  }
+}
+
+contract LuckyMachine is VRFConsumerBase {
     //RULES:
     // - balance of contract must be enough to payout winnings with 1 entrant before start of game
     // - prize pool can increase, but only up to current balance of contract, prize must be
     //   guaranteed payable.
+
+    using SafeMathChainlink for uint256;
 
     address payable public owner;
 
@@ -62,22 +175,26 @@ contract LuckyMachine is VRFConsumerBase{
 
     function placeBet(uint pick) public payable{
         // check that game can be played
-        require(pick <= maxPick, "Pick is too high. Choose a lower number.");
-        require(canPlayGame(msg.value),"Not enough funds for payout or max bet exceeded.");
+        placeBetFor(msg.sender, pick);
+    }
 
-        _unplayedBets += msg.value;
-        createGame(msg.sender, msg.value, pick);
-        playGame(_currentGame);
+    function placeBetFor(address payable player, uint pick) public payable {
+      require(pick <= maxPick, "Pick is too high. Choose a lower number.");
+      require(canPlayGame(msg.value),"Not enough funds for payout or max bet exceeded.");
+
+      _unplayedBets = _unplayedBets.add(msg.value);
+      createGame(player, msg.value, pick);
+      playGame(_currentGame);
     }
 
     function createGame(address payable _player, uint _bet, uint _pick) internal {
-        _currentGame++;
+        _currentGame.add(1);
         Game memory newGame = Game ({
             id: _currentGame,
             player: _player,
             bet: _bet,
             pick: _pick,
-            winner: maxPick + 10, //TODO: use safe math
+            winner: maxPick.add(10), //TODO: use safe math
             played: false
         });
         games[newGame.id] = newGame;
@@ -103,11 +220,11 @@ contract LuckyMachine is VRFConsumerBase{
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         //randomResult = randomness;
         Game storage g = games[_gameRequsts[requestId]];
-        uint totalPayout = ((g.bet * payout) + g.bet);
+        uint totalPayout = g.bet.mul(payout) + g.bet;
         require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
 
         // update game with chosen number
-        g.winner = randomness % (maxPick + 1);
+        g.winner = randomness.mod(maxPick.add(1));
 
         // set game to played
         g.played = true;
@@ -168,7 +285,6 @@ contract LuckyMachine is VRFConsumerBase{
         if (LINK.balanceOf(address(this)) > 0) {
             LINK.transfer(owner, LINK.balanceOf(address(this)));
         }
-
 
     }
 }

@@ -16,7 +16,7 @@ import { Link, Router } from "../routes";
 import luckyMachine from "../ethereum/luckyMachine";
 import web3 from "../ethereum/web3";
 
-class Dashboard extends Component {
+class Play extends Component {
   state = {
     bet: 0,
     pick: 0,
@@ -134,4 +134,4 @@ class Dashboard extends Component {
   }
 }
 
-export default Dashboard;
+export default Play;
