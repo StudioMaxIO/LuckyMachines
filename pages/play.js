@@ -9,7 +9,8 @@ import {
   Form,
   Input,
   Message,
-  Label
+  Label,
+  Menu
 } from "semantic-ui-react";
 import Layout from "../components/Layout";
 import { Link, Router } from "../routes";
@@ -18,12 +19,19 @@ import web3 from "../ethereum/web3";
 
 class Play extends Component {
   state = {
-    bet: 0,
+    bet: 0.01,
     pick: 0,
     gameIDInput: "",
     checkGameLoading: false,
     loading: false,
-    errorMessage: ""
+    errorMessage: "",
+    summaryGameID: "",
+    summaryMaxPick: "",
+    summaryPlayer: "",
+    summaryBet: "",
+    summaryPick: "",
+    summaryWinningNumber: "pending...",
+    summaryStatus: "Awaiting Random Number"
   };
 
   static async getInitialProps(props) {
@@ -37,17 +45,51 @@ class Play extends Component {
       address: props.query.address,
       minimumBet: summary[0],
       maximumBet: summary[1],
-      payout: summary[2]
+      payout: summary[2],
+      gameID: props.query.gameID
     };
   }
 
   async componentDidMount() {
     this._isMounted = true;
+    if (this.props.gameID != "") {
+      this.setState({ summaryGameID: this.props.gameID });
+    }
   }
 
   componentWillUnmount() {
     this._isMounted = false;
   }
+
+  displayPickerValues() {
+    const final = [];
+    for (var i = 0; i < 99; i++) {
+      final.push(
+        <Button
+          size="mini"
+          style={{ margin: "5px" }}
+          onClick={this.selectNumber}
+          name={i}
+          active={this.state.pick === i}
+        >
+          {i}
+        </Button>
+        // <Menu style={{ marginTop: "10px" }}>
+        //   <Menu.Item
+        //     onClick={this.selectNumber}
+        //     name={i}
+        //     active={this.state.pick === i}
+        //   />
+        // </Menu>
+      );
+    }
+    return <div>{final}</div>;
+  }
+
+  selectNumber = (e, { name }) => {
+    this.setState({ pick: name });
+    //this.setState({ activeItem: name });
+  };
 
   onSubmit = async event => {
     event.preventDefault();
@@ -118,29 +160,30 @@ class Play extends Component {
               </center>
             </Grid.Column>
           </Grid.Row>
-          <Grid.Row color="blue">
+          <Grid.Row color="blue" centered>
+            <Label color="black">Pick</Label>
+            {this.displayPickerValues()}
             <Form onSubmit={this.onSubmit} error={!!this.state.errorMessage}>
-              <Form.Group widths="equal">
-                <Form.Field>
-                  <Label color="black">Pick</Label>
-                  <Input
-                    value={this.state.pick}
-                    onChange={event =>
-                      this.setState({ pick: event.target.value })
-                    }
-                  />
-                </Form.Field>
-                <Form.Field>
-                  <Label color="black">Bet</Label>
-                  <Input
-                    label="ETH"
-                    labelPosition="right"
-                    value={this.state.bet}
-                    onChange={event =>
-                      this.setState({ bet: event.target.value })
-                    }
-                  />
-                </Form.Field>
+              <Form.Group style={{ paddingTop: "10px" }}>
+                <center>
+                  <Form.Field>
+                    <Label
+                      color="black"
+                      style={{ marginTop: "10px", padding: "10px" }}
+                    >
+                      Bet
+                    </Label>
+                    <Input
+                      label="ETH"
+                      labelPosition="right"
+                      value={this.state.bet}
+                      style={{ padding: "5px" }}
+                      onChange={event =>
+                        this.setState({ bet: event.target.value })
+                      }
+                    />
+                  </Form.Field>
+                </center>
               </Form.Group>
               <Message error header="Oops!" content={this.state.errorMessage} />
               <Button loading={this.state.loading} color="orange" size="huge">
@@ -175,42 +218,45 @@ class Play extends Component {
             </Grid.Column>
           </Grid.Row>
         </Grid>
-        <Grid style={{ paddingTop: "10px" }}>
-          <Grid.Row centered columns={2}>
-            <Grid.Column color="black">
-              <center>
-                <h2
-                  style={{
-                    textColor: "black",
-                    fontWeight: "normal"
-                  }}
-                >
-                  Game #124
-                </h2>
-              </center>
-            </Grid.Column>
-          </Grid.Row>
-          <Grid.Row centered columns={2}>
-            <Grid.Column color="grey">
-              <p>
-                <strong>Player:</strong>{" "}
-                0x2F7a65f3702FB30bB7Ec60A19e9d7F9b99864C09
-              </p>
-              <p>
-                <strong>Bet:</strong> 0.1 ETH
-              </p>
-              <p>
-                <strong>Pick:</strong> 24
-              </p>
-              <p>
-                <strong>Winning Number:</strong> Pending...
-              </p>
-              <p>
-                <strong>Game Not Yet Played</strong>
-              </p>
-            </Grid.Column>
-          </Grid.Row>
-        </Grid>
+        {this.state.summaryGameID ? (
+          <Grid style={{ paddingTop: "10px" }}>
+            <Grid.Row centered columns={2}>
+              <Grid.Column color="black">
+                <center>
+                  <h2
+                    style={{
+                      textColor: "black",
+                      fontWeight: "normal"
+                    }}
+                  >
+                    Game #{this.state.summaryGameID}
+                  </h2>
+                </center>
+              </Grid.Column>
+            </Grid.Row>
+            <Grid.Row centered columns={2} hidden="true">
+              <Grid.Column color="grey">
+                <p>
+                  <strong>Player:</strong> {this.state.summaryPlayer}
+                </p>
+                <p>
+                  <strong>Bet:</strong>{" "}
+                  {web3.utils.fromWei(this.state.summaryBet, "ether")} ETH
+                </p>
+                <p>
+                  <strong>Pick:</strong> {this.state.summaryPick}
+                </p>
+                <p>
+                  <strong>Winning Number:</strong>{" "}
+                  {this.state.summaryWinningNumber}
+                </p>
+                <p>
+                  <strong>{this.state.summaryStatus}</strong>
+                </p>
+              </Grid.Column>
+            </Grid.Row>
+          </Grid>
+        ) : null}
       </Layout>
     );
   }
