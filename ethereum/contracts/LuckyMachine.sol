@@ -1,9 +1,10 @@
 pragma solidity ^0.6.0;
 
-//import "https://raw.githubusercontent.com/smartcontractkit/chainlink/master/evm-contracts/src/v0.6/VRFConsumerBase.sol";
-//import "@chainlink/contracts/src/v0.6/VRFConsumberBase.sol"
+import "https://raw.githubusercontent.com/smartcontractkit/chainlink/master/evm-contracts/src/v0.6/VRFConsumerBase.sol";
+import "@chainlink/contracts/src/v0.6/VRFConsumberBase.sol"
+import "@openzeppelin/contracts/access/Ownable.sol"
 
-contract LuckyMachine is VRFConsumerBase {
+contract LuckyMachine is VRFConsumerBase, Ownable {
     //RULES:
     // - balance of contract must be enough to payout winnings with 1 entrant before start of game
     // - prize pool can increase, but only up to current balance of contract, prize must be
@@ -11,7 +12,7 @@ contract LuckyMachine is VRFConsumerBase {
 
     using SafeMathChainlink for uint256;
 
-    address payable public owner;
+    //address payable public owner;
 
     bytes32 internal keyHash;
     uint256 internal fee;
@@ -30,12 +31,13 @@ contract LuckyMachine is VRFConsumerBase {
     uint public minBet;
     uint public _unplayedBets;
     uint public _currentGame;
+    address payable public payoutAddress;
     uint public payout; // Multiplier, e.g. 10X: payout (10) * bet (X)
 
     mapping(uint => Game) public games;
     mapping(bytes32 => uint) public _gameRequsts;
 
-    constructor(address payable _owner, uint _maxBet, uint _minBet, uint _maxPick, uint _payout)
+    constructor(address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout)
         VRFConsumerBase(
             0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
             0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
@@ -45,7 +47,7 @@ contract LuckyMachine is VRFConsumerBase {
 
             _currentGame = 0;
             _unplayedBets = 0;
-            owner = _owner;
+            payoutAddress = _payoutAddress;
             minBet = _minBet;
             maxBet = _maxBet;
             maxPick = _maxPick;
@@ -110,25 +112,27 @@ contract LuckyMachine is VRFConsumerBase {
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         //randomResult = randomness;
         Game storage g = games[_gameRequsts[requestId]];
-        uint totalPayout = g.bet.mul(payout) + g.bet;
-        require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
+        if(g.id > 0){
+          uint totalPayout = g.bet.mul(payout) + g.bet;
+            require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
 
-        // update game with chosen number
-        g.winner = randomness.mod(maxPick.add(1));
+            // update game with chosen number
+            g.winner = randomness.mod(maxPick.add(1));
 
-        // set game to played
-        g.played = true;
+            // set game to played
+            g.played = true;
 
-        // remove from unplayed bets
-        if(_unplayedBets >= g.bet) {
-            _unplayedBets -= g.bet;
-        } else {
-            _unplayedBets = 0;
-        }
+            // remove from unplayed bets
+            if(_unplayedBets >= g.bet) {
+                _unplayedBets -= g.bet;
+            } else {
+                _unplayedBets = 0;
+            }
 
-        // payout if winner (initial bet plus winnings)
-        if (g.pick == g.winner) {
-            g.player.transfer(totalPayout);
+            // payout if winner (initial bet plus winnings)
+            if (g.pick == g.winner) {
+                g.player.transfer(totalPayout);
+            }
         }
     }
 
@@ -156,18 +160,19 @@ contract LuckyMachine is VRFConsumerBase {
 
     }
 
-    function setMaxBet(uint _maxBet) public {
-        // must be owner to set this value
+    function setMaxBet(uint _maxBet) public onlyOwner {
         maxBet = _maxBet;
     }
 
-    function setMinBet(uint _minBet) public {
-        // must be owner to set this value
+    function setMinBet(uint _minBet) public onlyOwner {
         minBet = _minBet;
     }
 
-    function closeMachine() public {
-        // must be owner to shut down machine
+    function setPayoutAddress(address payable _payoutAddress) public onlyOwner {
+        payoutAddress = _payoutAddress;
+    }
+
+    function closeMachine() public onlyOwner {
 
         require (address(this).balance > _unplayedBets);
 
@@ -175,10 +180,10 @@ contract LuckyMachine is VRFConsumerBase {
         // other catastrophic failure occurs, contract must be able to refund unplayed bets to players.
 
         uint availableContractBalance = address(this).balance - _unplayedBets;
-        owner.transfer(availableContractBalance);
+        payoutAddress.transfer(availableContractBalance);
 
         if (LINK.balanceOf(address(this)) > 0) {
-            LINK.transfer(owner, LINK.balanceOf(address(this)));
+            LINK.transfer(payoutAddress, LINK.balanceOf(address(this)));
         }
 
     }
