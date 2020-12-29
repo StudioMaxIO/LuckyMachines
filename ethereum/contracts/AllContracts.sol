@@ -157,7 +157,9 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
   }
 
   LinkTokenInterface internal LINK;
-  address private vrfCoordinator;
+
+  //NOTE: this is set to private in original contract.
+  address internal vrfCoordinator;
 
   mapping(bytes32 /* keyHash */ => uint256 /* nonce */) public nonces;
   constructor(address _vrfCoordinator, address _link) public {
@@ -205,6 +207,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     mapping(bytes32 => uint) public _gameRequsts;
 
     constructor(address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout)
+        //KOVAN ADDRESSES, can be updated by owner once contract created
         VRFConsumerBase(
             0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
             0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
@@ -280,7 +283,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         //randomResult = randomness;
         Game storage g = games[_gameRequsts[requestId]];
         if(g.id > 0){
-          uint totalPayout = g.bet.mul(payout) + g.bet;
+            uint totalPayout = g.bet.mul(payout) + g.bet;
             require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
 
             // update game with chosen number
@@ -300,6 +303,8 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             if (g.pick == g.winner) {
                 g.player.transfer(totalPayout);
             }
+
+            // emit gamePlayed event
         }
     }
 
@@ -327,12 +332,28 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     }
 
+    function setVRFCoordinator(address _vrfCoordinator) public onlyOwner {
+        vrfCoordinator = _vrfCoordinator;
+    }
+
+    function setKeyHash(bytes32 _keyHash) public onlyOwner {
+        keyHash = _keyHash;
+    }
+
+    function setLINK(address _linkAddress) public onlyOwner {
+        LINK = LinkTokenInterface(_linkAddress);
+    }
+
     function setMaxBet(uint _maxBet) public onlyOwner {
         maxBet = _maxBet;
     }
 
     function setMinBet(uint _minBet) public onlyOwner {
         minBet = _minBet;
+    }
+
+    function setPayout(uint _payout) public onlyOwner {
+        payout = _payout;
     }
 
     function setPayoutAddress(address payable _payoutAddress) public onlyOwner {
