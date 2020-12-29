@@ -45,6 +45,7 @@ class Play extends Component {
       address: props.query.address,
       minimumBet: summary[0],
       maximumBet: summary[1],
+      maximumPick: summary[3],
       payout: summary[2],
       gameID: props.query.gameID
     };
@@ -63,7 +64,8 @@ class Play extends Component {
 
   displayPickerValues() {
     const final = [];
-    for (var i = 0; i < 99; i++) {
+    console.log("Max pick: ", this.props.maximumPick);
+    for (var i = 0; i < Number(this.props.maximumPick) + 1; i++) {
       final.push(
         <Button
           size="mini"
@@ -74,13 +76,6 @@ class Play extends Component {
         >
           {i}
         </Button>
-        // <Menu style={{ marginTop: "10px" }}>
-        //   <Menu.Item
-        //     onClick={this.selectNumber}
-        //     name={i}
-        //     active={this.state.pick === i}
-        //   />
-        // </Menu>
       );
     }
     return <div>{final}</div>;
@@ -91,16 +86,16 @@ class Play extends Component {
     //this.setState({ activeItem: name });
   };
 
-  onSubmit = async event => {
+  placeBet = async event => {
     event.preventDefault();
-
     this.setState({ loading: true, errorMessage: "" });
 
     try {
       const accounts = await web3.eth.getAccounts();
+      const luckyMachine = LuckyMachine(String(this.props.address));
       await luckyMachine.methods.placeBet(this.state.pick).send({
         from: accounts[0],
-        value: web3.toWei(this.state.bet, "ether")
+        value: web3.utils.toWei(String(this.state.bet), "ether")
       });
 
       //Router.pushRoute("/workshop");
@@ -161,15 +156,27 @@ class Play extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row color="blue" centered>
-            <Label color="black">Pick</Label>
+            <Label
+              color="black"
+              style={{ marginBottom: "-25px", zIndex: "1000" }}
+            >
+              Pick
+            </Label>
+          </Grid.Row>
+          <Grid.Row color="blue" centered>
             {this.displayPickerValues()}
-            <Form onSubmit={this.onSubmit} error={!!this.state.errorMessage}>
+          </Grid.Row>
+          <Grid.Row color="blue" centered>
+            <Form onSubmit={this.placeBet} error={!!this.state.errorMessage}>
               <Form.Group style={{ paddingTop: "10px" }}>
                 <center>
                   <Form.Field>
                     <Label
                       color="black"
-                      style={{ marginTop: "10px", padding: "10px" }}
+                      style={{
+                        marginBottom: "5px",
+                        padding: "10px"
+                      }}
                     >
                       Bet
                     </Label>
