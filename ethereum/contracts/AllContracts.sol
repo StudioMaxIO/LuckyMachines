@@ -195,7 +195,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         bool played;
     }
 
-    uint maxPick;
+    uint public maxPick;
     uint public maxBet;
     uint public minBet;
     uint public _unplayedBets;
@@ -250,7 +250,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function createGame(address payable _player, uint _bet, uint _pick) internal {
-        _currentGame.add(1);
+        _currentGame = _currentGame.add(1);
         Game memory newGame = Game ({
             id: _currentGame,
             player: _player,
@@ -321,9 +321,9 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         g.player.transfer(g.bet);
     }
 
-    function getSummary() public view returns(uint, uint, uint) {
-        //minBet, maxBet, payout
-        return(minBet, maxBet, payout);
+    function getSummary() public view returns(uint, uint, uint, uint) {
+        //minBet, maxBet, payout, maxPick
+        return(minBet, maxBet, payout, maxPick);
     }
 
     // Owner Functions
