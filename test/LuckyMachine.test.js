@@ -69,7 +69,25 @@ describe("Lucky Machines", () => {
     }
     assert(errorMessage != "none");
   });
-  it("only play unplayed game", () => {});
+  it("only play unplayed game", async () => {
+    let errorMessage = "none";
+    await machine.methods
+      .testCreateGame(accounts[0], "0.1", "1", true, "100")
+      .send({
+        from: accounts[0],
+        gas: "3000000"
+      });
+    try {
+      await machine.methods.testPlayGame("100").send({
+        from: accounts[0],
+        gas: "3000000"
+      });
+    } catch (err) {
+      errorMessage = err.message;
+      console.log(err.message);
+    }
+    assert(errorMessage != "none");
+  });
   it("completes winning game", () => {});
   it("pays out winner", () => {});
   it("completes non-winning game", () => {});

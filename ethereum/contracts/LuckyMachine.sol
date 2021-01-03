@@ -218,10 +218,9 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     // TEST FUNCTIONS
     // DO NOT COMPILE FINAL CONTRACT WITH THESE, FOR TESTING ONLY!!!
-    function testCreateGame(address payable _player, uint _bet, uint _pick, bool _played) public {
-        _currentGame = _currentGame.add(1);
+    function testCreateGame(address payable _player, uint _bet, uint _pick, bool _played, uint _gameID) public {
         Game memory newGame = Game ({
-            id: _currentGame,
+            id: _gameID,
             player: _player,
             bet: _bet,
             pick: _pick,
