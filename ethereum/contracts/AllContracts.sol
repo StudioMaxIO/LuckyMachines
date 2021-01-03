@@ -384,6 +384,46 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         }
 
     }
+
+    // TEST FUNCTIONS
+    // DO NOT COMPILE FINAL CONTRACT WITH THESE, FOR TESTING ONLY!!!
+    function testPlaceBetFor(address payable player, uint pick, uint256 testRandomNumber) public payable {
+      require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
+      require(pick <= maxPick, "Pick is too high. Choose a lower number.");
+      require(betInRange(msg.value),"Outisde of bet range.");
+
+      _unplayedBets = _unplayedBets.add(msg.value);
+      createGame(player, msg.value, pick);
+      testPlayGame(_currentGame, testRandomNumber);
+    }
+
+    function testPlayGame(uint gameID, uint256 testRandomNumber) public {
+        bytes32 reqID = keccak256(abi.encodePacked(now, block.difficulty, msg.sender));
+        _gameRequsts[reqID] = gameID;
+        testFulfillRandomness(reqID, testRandomNumber);
+    }
+
+    function testFulfillRandomness(bytes32 requestId, uint256 randomness) internal {
+        Game storage g = games[_gameRequsts[requestId]];
+        if(g.id > 0){
+            uint totalPayout = g.bet.mul(payout) + g.bet;
+            require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
+
+            g.winner = randomness;
+            g.played = true;
+
+            if(_unplayedBets >= g.bet) {
+                _unplayedBets -= g.bet;
+            } else {
+                _unplayedBets = 0;
+            }
+
+            if (g.pick == g.winner) {
+                g.player.transfer(totalPayout);
+            }
+            // emit gamePlayed event
+        }
+    }
 }
 
 contract LuckyMachineFactory{
