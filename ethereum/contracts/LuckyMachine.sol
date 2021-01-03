@@ -35,7 +35,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     uint public payout; // Multiplier, e.g. 10X: payout (10) * bet (X)
 
     mapping(uint => Game) public games;
-    mapping(bytes32 => uint) public _gameRequsts;
+    mapping(bytes32 => uint) public _gameRequests;
 
     constructor(address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout)
         //KOVAN ADDRESSES, can be updated by owner once contract created
@@ -107,11 +107,11 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function playGame(uint gameID) public {
-        // make sure game hasn't been played already
+        require(games[gameID].played == false, "Game already played.");
         // get random number
         uint seed = 12345;
         bytes32 reqID = getRandomNumber(seed);
-        _gameRequsts[reqID] = gameID;
+        _gameRequests[reqID] = gameID;
     }
 
     function getRandomNumber(uint256 seed) public returns (bytes32 requestId) {
@@ -121,7 +121,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         //randomResult = randomness;
-        Game storage g = games[_gameRequsts[requestId]];
+        Game storage g = games[_gameRequests[requestId]];
         if(g.id > 0){
             uint totalPayout = g.bet.mul(payout) + g.bet;
             require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
@@ -218,6 +218,19 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     // TEST FUNCTIONS
     // DO NOT COMPILE FINAL CONTRACT WITH THESE, FOR TESTING ONLY!!!
+    function testCreateGame(address payable _player, uint _bet, uint _pick, bool _played) public {
+        _currentGame = _currentGame.add(1);
+        Game memory newGame = Game ({
+            id: _currentGame,
+            player: _player,
+            bet: _bet,
+            pick: _pick,
+            winner: maxPick.add(10), //TODO: use 0, don't allow 0 as pickable value
+            played: _played
+        });
+        games[newGame.id] = newGame;
+    }
+
     function testPlaceBetFor(address payable player, uint pick, uint256 testRandomNumber) public payable {
       require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
       require(pick <= maxPick, "Pick is too high. Choose a lower number.");
@@ -229,13 +242,14 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function testPlayGame(uint gameID, uint256 testRandomNumber) public {
+        require(games[gameID].played == false, "Game already played");
         bytes32 reqID = keccak256(abi.encodePacked(now, block.difficulty, msg.sender));
-        _gameRequsts[reqID] = gameID;
+        _gameRequests[reqID] = gameID;
         testFulfillRandomness(reqID, testRandomNumber);
     }
 
     function testFulfillRandomness(bytes32 requestId, uint256 randomness) internal {
-        Game storage g = games[_gameRequsts[requestId]];
+        Game storage g = games[_gameRequests[requestId]];
         if(g.id > 0){
             uint totalPayout = g.bet.mul(payout) + g.bet;
             require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");

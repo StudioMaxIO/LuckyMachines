@@ -55,7 +55,20 @@ describe("Lucky Machines", () => {
     }
     assert(errorMessage != "none");
   });
-  it("Maximum bet enforced", () => {});
+  it("Maximum bet enforced", async () => {
+    let errorMessage = "none";
+    try {
+      await machine.methods.testPlaceBetFor(accounts[0], "3", "2").send({
+        from: accounts[0],
+        value: web3.utils.toWei("0.2", "ether"),
+        gas: "3000000"
+      });
+    } catch (err) {
+      errorMessage = err.message;
+      console.log(err.message);
+    }
+    assert(errorMessage != "none");
+  });
   it("only play unplayed game", () => {});
   it("completes winning game", () => {});
   it("pays out winner", () => {});
