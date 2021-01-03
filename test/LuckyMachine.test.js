@@ -36,4 +36,6 @@ describe("Lucky Machines", () => {
     assert.ok(factory.options.address);
     assert.ok(machine.options.address);
   });
+
+  it("pays out winner", () => {});
 });
