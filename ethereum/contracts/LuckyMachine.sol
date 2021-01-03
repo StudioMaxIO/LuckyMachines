@@ -268,6 +268,12 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             // emit gamePlayed event
         }
     }
+    
+    function testCloseMachine() public onlyOwner {
+        require (address(this).balance > _unplayedBets);
+        uint availableContractBalance = address(this).balance.sub(_unplayedBets);
+        payoutAddress.transfer(availableContractBalance);
+    }
 }
 
 contract LuckyMachineFactory{

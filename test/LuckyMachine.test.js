@@ -41,6 +41,7 @@ describe("Lucky Machines", () => {
     assert.ok(factory.options.address);
     assert.ok(machine.options.address);
   });
+
   it("Minimum bet enforced", async () => {
     let errorMessage = "none";
     try {
@@ -55,6 +56,7 @@ describe("Lucky Machines", () => {
     }
     assert(errorMessage != "none");
   });
+
   it("Maximum bet enforced", async () => {
     let errorMessage = "none";
     try {
@@ -69,16 +71,23 @@ describe("Lucky Machines", () => {
     }
     assert(errorMessage != "none");
   });
+
   it("only play unplayed game", async () => {
     let errorMessage = "none";
     await machine.methods
-      .testCreateGame(accounts[0], "0.1", "1", true, "100")
+      .testCreateGame(
+        accounts[0],
+        web3.utils.toWei("0.1", "ether"),
+        "1",
+        "true",
+        "100"
+      )
       .send({
         from: accounts[0],
         gas: "3000000"
       });
     try {
-      await machine.methods.testPlayGame("100").send({
+      await machine.methods.testPlayGame("100", "1").send({
         from: accounts[0],
         gas: "3000000"
       });
@@ -88,9 +97,48 @@ describe("Lucky Machines", () => {
     }
     assert(errorMessage != "none");
   });
-  it("completes winning game", () => {});
-  it("pays out winner", () => {});
-  it("completes non-winning game", () => {});
-  it("unplayted bets removed after game played", () => {});
-  it("unplayed game can be refunded", () => {});
+
+  it("only allows play if machine is funded", () => {});
+
+  it("machine can be closed down", async () => {
+    const openingBalance = web3.eth.getBalance(machine.options.address);
+    try {
+      await machine.methods.testCloseMachine().send({
+        from: accounts[0],
+        gas: "3000000"
+      });
+    } catch (err) {
+      console.log(err.message);
+    }
+    const closingBalance = web3.eth.getBalance(machine.options.address);
+    assert.equal(closingBalance, "0");
+  });
+
+  it("completes winning game", () => {
+    // make sure game is set to complete
+    // rendom number is saved to game
+    assert.ok();
+  });
+
+  it("pays out winner", () => {
+    // Winner receives payout plus initial bet back
+    assert.ok();
+  });
+
+  it("completes non-winning game", () => {
+    // game is set to complete
+    // random number saved to game
+    assert.ok();
+  });
+
+  it("unplayted bets removed after game played", () => {
+    assert.ok();
+  });
+
+  it("unplayed game can be refunded on active machine", () => {
+    assert.ok();
+  });
+  it("unplayed game can be refunded on inactive machine", () => {
+    assert.ok();
+  });
 });
