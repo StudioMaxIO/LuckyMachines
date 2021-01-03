@@ -29,6 +29,11 @@ beforeEach(async () => {
 
   [machineAddress] = await factory.methods.getMachines().call();
   machine = await new web3.eth.Contract(compiledMachine.abi, machineAddress);
+  await machine.methods.fundMachine().send({
+    from: accounts[0],
+    value: web3.utils.toWei("1", "ether"),
+    gas: "3000000"
+  });
 });
 
 describe("Lucky Machines", () => {
@@ -36,6 +41,25 @@ describe("Lucky Machines", () => {
     assert.ok(factory.options.address);
     assert.ok(machine.options.address);
   });
-
+  it("Minimum bet enforced", async () => {
+    let errorMessage = "none";
+    try {
+      await machine.methods.testPlaceBetFor(accounts[0], "3", "2").send({
+        from: accounts[0],
+        value: web3.utils.toWei("0.001", "ether"),
+        gas: "3000000"
+      });
+    } catch (err) {
+      errorMessage = err.message;
+      console.log(err.message);
+    }
+    assert(errorMessage != "none");
+  });
+  it("Maximum bet enforced", () => {});
+  it("only play unplayed game", () => {});
+  it("completes winning game", () => {});
   it("pays out winner", () => {});
+  it("completes non-winning game", () => {});
+  it("unplayted bets removed after game played", () => {});
+  it("unplayed game can be refunded", () => {});
 });

@@ -55,8 +55,12 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             payout = _payout;
     }
 
-    function canPlayGame(uint bet) public view returns(bool){
-        if (bet >= minBet && bet <= maxBet && (address(this).balance - _unplayedBets) >= ((bet * payout)+bet)) {
+    receive() external payable {
+
+    }
+
+    function betInRange(uint bet) public view returns(bool){
+        if (bet >= minBet && bet <= maxBet) {
             // At a minimum this contract should have enough to cover any potential winnings plus refund unplayed bets
             // preferable to complte all games, but in case oracle becomes unreachable or other catastrophic incident occurs,
             // bets should be refunded.
@@ -66,14 +70,19 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         }
     }
 
+    function betPayable(uint bet) public view returns(bool){
+        return (address(this).balance.sub(_unplayedBets) >= bet.mul(payout).add(bet));
+    }
+
     function placeBet(uint pick) public payable{
         // check that game can be played
         placeBetFor(msg.sender, pick);
     }
 
     function placeBetFor(address payable player, uint pick) public payable {
+      require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
       require(pick <= maxPick, "Pick is too high. Choose a lower number.");
-      require(canPlayGame(msg.value),"Not enough funds for payout or max bet exceeded.");
+      require(betInRange(msg.value),"Outisde of bet range.");
 
       _unplayedBets = _unplayedBets.add(msg.value);
       createGame(player, msg.value, pick);
@@ -87,7 +96,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             player: _player,
             bet: _bet,
             pick: _pick,
-            winner: maxPick.add(10), //TODO: use safe math
+            winner: maxPick.add(10), //TODO: use 0, don't allow 0 as pickable value
             played: false
         });
         games[newGame.id] = newGame;
@@ -164,8 +173,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function setVRFCoordinator(address _vrfCoordinator) public onlyOwner {
-      //NOTE: Won't work if compiled from here, must compile AllContracts to include
-      //      this functionality
         vrfCoordinator = _vrfCoordinator;
     }
 
@@ -207,45 +214,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             LINK.transfer(payoutAddress, LINK.balanceOf(address(this)));
         }
 
-    }
-
-    // TEST FUNCTIONS
-    // DO NOT COMPILE FINAL CONTRACT WITH THESE, FOR TESTING ONLY!!!
-    function testPlaceBetFor(address payable player, uint pick, uint256 testRandomNumber) public payable {
-      require(pick <= maxPick, "Pick is too high. Choose a lower number.");
-      require(canPlayGame(msg.value),"Not enough funds for payout or max bet exceeded.");
-
-      _unplayedBets = _unplayedBets.add(msg.value);
-      createGame(player, msg.value, pick);
-      testPlayGame(_currentGame, testRandomNumber);
-    }
-
-    function testPlayGame(uint gameID, uint256 testRandomNumber) public {
-        bytes32 reqID = keccak256(abi.encodePacked(now, block.difficulty, msg.sender));
-        _gameRequsts[reqID] = gameID;
-        testFulfillRandomness(reqID, testRandomNumber);
-    }
-
-    function testFulfillRandomness(bytes32 requestId, uint256 randomness) internal {
-        Game storage g = games[_gameRequsts[requestId]];
-        if(g.id > 0){
-            uint totalPayout = g.bet.mul(payout) + g.bet;
-            require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
-
-            g.winner = randomness;
-            g.played = true;
-
-            if(_unplayedBets >= g.bet) {
-                _unplayedBets -= g.bet;
-            } else {
-                _unplayedBets = 0;
-            }
-
-            if (g.pick == g.winner) {
-                g.player.transfer(totalPayout);
-            }
-            // emit gamePlayed event
-        }
     }
 }
 
