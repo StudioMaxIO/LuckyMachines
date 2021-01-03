@@ -209,3 +209,20 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     }
 }
+
+contract LuckyMachineFactory{
+    address[] public machines;
+
+    function createMachine(uint maxBet, uint minBet, uint maxPick, uint payout) public returns(address){
+        //address payable _owner, uint _maxBet, uint _minBet, uint _maxPick, uint _payout
+        LuckyMachine newMachine = new LuckyMachine(msg.sender, maxBet, minBet, maxPick, payout);
+        newMachine.transferOwnership(msg.sender);
+        address newMachineAddress = address(newMachine);
+        machines.push(newMachineAddress);
+        return newMachineAddress;
+    }
+
+    function getMachines() public view returns (address[] memory) {
+        return machines;
+    }
+}
