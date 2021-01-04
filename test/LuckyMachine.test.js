@@ -110,35 +110,106 @@ describe("Lucky Machines", () => {
     } catch (err) {
       console.log(err.message);
     }
-    const closingBalance = web3.eth.getBalance(machine.options.address);
+    const closingBalance = await web3.eth.getBalance(machine.options.address);
     assert.equal(closingBalance, "0");
   });
 
-  it("completes winning game", () => {
-    // make sure game is set to complete
-    // rendom number is saved to game
-    assert.ok();
+  it("completes winning game", async () => {
+    await machine.methods.testPlaceBetFor(accounts[0], "2", "2").send({
+      from: accounts[0],
+      value: minBet,
+      gas: "3000000"
+    });
+    const game = await machine.methods.games("1").call();
+    assert.ok(game.played == true);
+    assert.ok(game.winner == "2");
   });
 
-  it("pays out winner", () => {
-    // Winner receives payout plus initial bet back
-    assert.ok();
+  it("completes non-winning game", async () => {
+    await machine.methods.testPlaceBetFor(accounts[0], "2", "3").send({
+      from: accounts[0],
+      value: minBet,
+      gas: "3000000"
+    });
+    const game = await machine.methods.games("1").call();
+    assert.ok(game.played == true);
+    assert.ok(game.winner == "3");
   });
 
-  it("completes non-winning game", () => {
-    // game is set to complete
-    // random number saved to game
-    assert.ok();
+  it("pays out winner", async () => {
+    // Should pay out bet * payout + bet. Test account starts with 100 ETH.
+    // Sent from account 0 on behalf of account 1 to check 1 account values
+    // unaffected by gas
+    const startingAccountBalance = await web3.eth.getBalance(accounts[1]);
+    const betAmountEth = "0.1";
+    const betAmountWei = web3.utils.toWei(betAmountEth, "ether");
+    await machine.methods.testPlaceBetFor(accounts[1], "2", "2").send({
+      from: accounts[0],
+      value: betAmountWei,
+      gas: "3000000"
+    });
+    const finalAccountBalance = await web3.eth.getBalance(accounts[1]);
+    console.log(
+      "Starting Balance:",
+      web3.utils.fromWei(startingAccountBalance, "ether")
+    );
+    console.log(
+      "Final Balance:",
+      web3.utils.fromWei(finalAccountBalance, "ether")
+    );
+
+    assert.ok(finalAccountBalance >= "100.3");
   });
 
-  it("unplayted bets removed after game played", () => {
-    assert.ok();
+  it("unplayed bets removed after game played", async () => {
+    await machine.methods.testPlaceBetFor(accounts[0], "2", "3").send({
+      from: accounts[0],
+      value: web3.utils.toWei("0.01", "ether"),
+      gas: "3000000"
+    });
+    const uplayedBets = await machine.methods._unplayedBets().call();
+    assert.ok(uplayedBets == "0");
   });
 
-  it("unplayed game can be refunded on active machine", () => {
-    assert.ok();
-  });
-  it("unplayed game can be refunded on inactive machine", () => {
-    assert.ok();
+  it("unplayed game can be refunded", async () => {
+    const startingAccountBalance = await web3.eth.getBalance(accounts[2]);
+
+    //add funding since this game is contrived, not an actual bet placed
+    await machine.methods.fundMachine().send({
+      from: accounts[0],
+      value: web3.utils.toWei("0.1", "ether"),
+      gas: "3000000"
+    });
+
+    // create game that hasn't been played
+    await machine.methods
+      .testCreateGame(
+        accounts[2],
+        web3.utils.toWei("0.1", "ether"),
+        "1",
+        false,
+        "123"
+      )
+      .send({
+        from: accounts[0],
+        gas: "3000000"
+      });
+
+    // request refund
+    await machine.methods.requestRefund("123").send({
+      from: accounts[0],
+      gas: "3000000"
+    });
+
+    const finalAccountBalance = await web3.eth.getBalance(accounts[2]);
+    const difference = finalAccountBalance - startingAccountBalance;
+
+    console.log("Starting Balance:", startingAccountBalance);
+    console.log("Final Balance:", finalAccountBalance);
+
+    assert.ok(
+      finalAccountBalance >=
+        startingAccountBalance + web3.utils.toWei("0.1", "ether")
+    );
   });
 });
