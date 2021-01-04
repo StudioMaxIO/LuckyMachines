@@ -98,10 +98,38 @@ describe("Lucky Machines", () => {
     assert(errorMessage != "none");
   });
 
-  it("only allows play if machine is funded", () => {});
+  it("only allows play if machine is funded", async () => {
+    let errorMessage = "none";
+
+    await machine.methods.testCloseMachine().send({
+      from: accounts[0],
+      gas: "3000000"
+    });
+
+    try {
+      await machine.methods
+        .testPlaceBetFor(accounts[0], maxPick, maxPick)
+        .send({
+          from: accounts[0],
+          value: maxBet,
+          gas: "3000000"
+        });
+    } catch (err) {
+      errorMessage = err.message;
+      console.log(err.message);
+    }
+    assert(errorMessage != "none");
+  });
 
   it("machine can be closed down", async () => {
     const openingBalance = web3.eth.getBalance(machine.options.address);
+    if (openingBalance == 0) {
+      await machine.methods.fundMachine().send({
+        from: accounts[0],
+        value: web3.utils.toWei("1", "ether"),
+        gas: "3000000"
+      });
+    }
     try {
       await machine.methods.testCloseMachine().send({
         from: accounts[0],
