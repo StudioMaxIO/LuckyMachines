@@ -114,7 +114,7 @@ class Play extends Component {
 
   render() {
     return (
-      <Layout>
+      <Layout page="play">
         <Grid centered columns={6} style={{ marginTop: "10px" }}>
           <Grid.Row color="black">
             <h1

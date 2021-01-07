@@ -19,7 +19,7 @@ import web3 from "../ethereum/web3";
 class Factory extends Component {
   render() {
     return (
-      <Layout>
+      <Layout page="factory">
         <h1>Factory</h1>
       </Layout>
     );

@@ -17,7 +17,7 @@ class LoadOperator extends Component {
 
   render() {
     return (
-      <Layout>
+      <Layout page="operate">
         <Grid centered style={{ marginTop: "10px" }}>
           <Grid.Row color="black">
             <Grid.Column>
