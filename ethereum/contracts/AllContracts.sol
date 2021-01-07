@@ -228,6 +228,10 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     }
 
+    function getLinkBalance() public view returns(uint){
+        return LINK.balanceOf(address(this));
+    }
+
     function betInRange(uint bet) public view returns(bool){
         if (bet >= minBet && bet <= maxBet) {
             // At a minimum this contract should have enough to cover any potential winnings plus refund unplayed bets

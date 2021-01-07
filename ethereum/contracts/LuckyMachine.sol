@@ -1,9 +1,3 @@
-pragma solidity ^0.6.0;
-
-import "https://raw.githubusercontent.com/smartcontractkit/chainlink/master/evm-contracts/src/v0.6/VRFConsumerBase.sol";
-import "@chainlink/contracts/src/v0.6/VRFConsumberBase.sol"
-import "@openzeppelin/contracts/access/Ownable.sol"
-
 contract LuckyMachine is VRFConsumerBase, Ownable {
     //RULES:
     // - balance of contract must be enough to payout winnings with 1 entrant before start of game
@@ -59,6 +53,10 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     }
 
+    function getLinkBalance() public view returns(uint){
+        return LINK.balanceOf(address(this));
+    }
+
     function betInRange(uint bet) public view returns(bool){
         if (bet >= minBet && bet <= maxBet) {
             // At a minimum this contract should have enough to cover any potential winnings plus refund unplayed bets
@@ -107,7 +105,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function playGame(uint gameID) public {
-        require(games[gameID].played == false, "Game already played.");
+        require(games[gameID].played == false, "game already played");
         // get random number
         uint seed = 12345;
         bytes32 reqID = getRandomNumber(seed);
@@ -207,7 +205,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         // Contract must retain any unplayed bets. If contract is unable to cover winnings or
         // other catastrophic failure occurs, contract must be able to refund unplayed bets to players.
 
-        uint availableContractBalance = address(this).balance - _unplayedBets;
+        uint availableContractBalance = address(this).balance.sub(_unplayedBets);
         payoutAddress.transfer(availableContractBalance);
 
         if (LINK.balanceOf(address(this)) > 0) {
@@ -241,7 +239,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function testPlayGame(uint gameID, uint256 testRandomNumber) public {
-        require(games[gameID].played == false, "Game already played");
+        require(games[gameID].played == false, "game already played");
         bytes32 reqID = keccak256(abi.encodePacked(now, block.difficulty, msg.sender));
         _gameRequests[reqID] = gameID;
         testFulfillRandomness(reqID, testRandomNumber);
@@ -268,7 +266,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             // emit gamePlayed event
         }
     }
-    
+
     function testCloseMachine() public onlyOwner {
         require (address(this).balance > _unplayedBets);
         uint availableContractBalance = address(this).balance.sub(_unplayedBets);

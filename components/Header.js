@@ -23,6 +23,16 @@ class Header extends Component {
           </Link>
           <Menu.Menu position="right">
             <Menu.Item
+              name="play"
+              active={activeItem === "play"}
+              onClick={this.handleItemClick}
+            />
+            <Menu.Item
+              name="operate"
+              active={activeItem === "operate"}
+              onClick={this.handleItemClick}
+            />
+            <Menu.Item
               name="factory"
               active={activeItem === "factory"}
               onClick={this.handleItemClick}

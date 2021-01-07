@@ -3,21 +3,21 @@ import { Card, Grid, Button, Form, Input } from "semantic-ui-react";
 import Layout from "../components/Layout";
 import { Link, Router } from "../routes";
 
-class Load extends Component {
+class LoadOperator extends Component {
   state = {
     machineAddress: ""
   };
 
   loadMachine = event => {
     if (this.state.machineAddress != "") {
-      var route = "/play/" + this.state.machineAddress;
+      var route = "/operate/" + this.state.machineAddress;
       Router.pushRoute(route);
     }
   };
 
   render() {
     return (
-      <Layout page="play">
+      <Layout page="operate">
         <Grid centered style={{ marginTop: "10px" }}>
           <Grid.Row color="black">
             <Grid.Column>
@@ -29,7 +29,7 @@ class Load extends Component {
                     fontWeight: "normal"
                   }}
                 >
-                  Lucky Machine
+                  Lucky Machine Operator
                 </h1>
                 <Form onSubmit={this.loadMachine}>
                   <Form.Field>
@@ -44,7 +44,7 @@ class Load extends Component {
                     />
                   </Form.Field>
                   <Button size="huge" color="blue">
-                    Play!
+                    Operate
                   </Button>
                 </Form>
               </center>
@@ -56,4 +56,4 @@ class Load extends Component {
   }
 }
 
-export default Load;
+export default LoadOperator;
