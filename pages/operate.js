@@ -17,8 +17,9 @@ import web3 from "../ethereum/web3";
 
 class Operate extends Component {
   state = {
-    ethBalance: 0,
-    linkBalance: 0
+    ethBalance: "",
+    linkBalance: "",
+    address: ""
   };
 
   static async getInitialProps(props) {
@@ -27,12 +28,6 @@ class Operate extends Component {
     this._isMounted = false;
     const luckyMachine = LuckyMachine(props.query.address);
     const summary = await luckyMachine.methods.getSummary().call();
-    const linkBalance = await luckyMachine.methods.getLinkBalance().call();
-    const ethBalance = await web3.eth.getBalance(props.query.address);
-    this.setState({
-      ethBalance: ethBalance,
-      linkBalance: linkBalance
-    });
 
     return {
       address: props.query.address,
@@ -45,19 +40,44 @@ class Operate extends Component {
 
   async componentDidMount() {
     this._isMounted = true;
+    this._isMounted && this.getBalances();
   }
 
   componentWillUnmount() {
     this._isMounted = false;
   }
 
+  async getBalances() {
+    const luckyMachine = LuckyMachine(this.props.address);
+    const ethBalance = await web3.eth.getBalance(this.props.address);
+    const linkBalance = await luckyMachine.methods.getLinkBalance().call();
+    this.setState({
+      ethBalance: ethBalance,
+      linkBalance: linkBalance
+    });
+  }
+
+  updateBalances = async event => {
+    const luckyMachine = LuckyMachine(this.props.address);
+    const ethBalance = await web3.eth.getBalance(this.props.address);
+    const linkBalance = await luckyMachine.methods.getLinkBalance().call();
+    this.setState({
+      ethBalance: ethBalance,
+      linkBalance: linkBalance
+    });
+  };
+
   render() {
     return (
       <Layout>
+        <h1>Operate Lucky Machine</h1>
+        <h3>{this.props.address}</h3>
         <h1>Balances</h1>
-        <p>ETH: {web3.eth.getBalance(props.query.address)}</p>
-        <p>LINK: XX.X</p>
-        <h1>Operate Lucky Machine: {this.props.address}</h1>
+        <a onClick={this.updateBalances}>Reload</a>
+        <p>ETH: {web3.utils.fromWei(this.state.ethBalance, "ether")}</p>
+        <p>LINK: {web3.utils.fromWei(this.state.linkBalance, "ether")}</p>
+        <p> Send ETH & LINK to {this.props.address} to fund machine </p>
+        <br />
         <p>Min Bet: {web3.utils.fromWei(this.props.minimumBet, "ether")} ETH</p>
         <p>Max Bet: {web3.utils.fromWei(this.props.maximumBet, "ether")} ETH</p>
         <p>Payout: {this.props.payout}X</p>
