@@ -24,7 +24,7 @@ beforeEach(async () => {
 
   await factory.methods.createMachine(maxBet, minBet, maxPick, payout).send({
     from: accounts[0],
-    gas: "3000000"
+    gas: "10000000"
   });
 
   [machineAddress] = await factory.methods.getMachines().call();
@@ -32,7 +32,7 @@ beforeEach(async () => {
   await machine.methods.fundMachine().send({
     from: accounts[0],
     value: web3.utils.toWei("1", "ether"),
-    gas: "3000000"
+    gas: "10000000"
   });
 });
 
@@ -48,7 +48,7 @@ describe("Lucky Machines", () => {
       await machine.methods.testPlaceBetFor(accounts[0], "3", "2").send({
         from: accounts[0],
         value: web3.utils.toWei("0.001", "ether"),
-        gas: "3000000"
+        gas: "10000000"
       });
     } catch (err) {
       errorMessage = err.message;
@@ -63,7 +63,7 @@ describe("Lucky Machines", () => {
       await machine.methods.testPlaceBetFor(accounts[0], "3", "2").send({
         from: accounts[0],
         value: web3.utils.toWei("0.2", "ether"),
-        gas: "3000000"
+        gas: "10000000"
       });
     } catch (err) {
       errorMessage = err.message;
@@ -84,12 +84,12 @@ describe("Lucky Machines", () => {
       )
       .send({
         from: accounts[0],
-        gas: "3000000"
+        gas: "10000000"
       });
     try {
       await machine.methods.testPlayGame("100", "1").send({
         from: accounts[0],
-        gas: "3000000"
+        gas: "10000000"
       });
     } catch (err) {
       errorMessage = err.message;
@@ -148,7 +148,7 @@ describe("Lucky Machines", () => {
       value: minBet,
       gas: "3000000"
     });
-    const game = await machine.methods.games("1").call();
+    const game = await machine.methods.games("2").call();
     assert.ok(game.played == true);
     assert.ok(game.winner == "2");
   });
@@ -159,7 +159,7 @@ describe("Lucky Machines", () => {
       value: minBet,
       gas: "3000000"
     });
-    const game = await machine.methods.games("1").call();
+    const game = await machine.methods.games("2").call();
     assert.ok(game.played == true);
     assert.ok(game.winner == "3");
   });
