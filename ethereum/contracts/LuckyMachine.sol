@@ -1,12 +1,6 @@
 contract LuckyMachine is VRFConsumerBase, Ownable {
-    //RULES:
-    // - balance of contract must be enough to payout winnings with 1 entrant before start of game
-    // - prize pool can increase, but only up to current balance of contract, prize must be
-    //   guaranteed payable.
 
     using SafeMathChainlink for uint256;
-
-    //address payable public owner;
 
     bytes32 internal keyHash;
     uint256 internal fee;
@@ -16,9 +10,20 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         address payable player;
         uint bet;
         uint pick;
-        uint winner; // set to number higher than possible before number is chosen
+        uint winner;
         bool played;
     }
+
+    uint private gas1;
+    uint private gas2;
+    uint private gas3;
+    uint private gas4;
+    uint private gas5;
+    uint private gas6;
+    uint private gas7;
+    uint private gas8;
+    uint private gas9;
+    uint private gas10;
 
     uint public maxPick;
     uint public maxBet;
@@ -40,13 +45,24 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             keyHash = 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4;
             fee = 0.1 * 10 ** 18; // 0.1 LINK
 
-            _currentGame = 0;
+            _currentGame = 1;
             _unplayedBets = 0;
             payoutAddress = _payoutAddress;
             minBet = _minBet;
             maxBet = _maxBet;
             maxPick = _maxPick;
             payout = _payout;
+
+            gas1 = 1;
+            gas2 = 1;
+            gas3 = 1;
+            gas4 = 1;
+            gas5 = 1;
+            gas6 = 1;
+            gas7 = 1;
+            gas8 = 1;
+            gas9 = 1;
+            gas10 = 1;
     }
 
     receive() external payable {
@@ -74,6 +90,16 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     function placeBet(uint pick) public payable{
         // check that game can be played
+        delete gas1;
+        delete gas2;
+        delete gas3;
+        delete gas4;
+        delete gas5;
+        delete gas6;
+        delete gas7;
+        delete gas8;
+        delete gas9;
+        delete gas10;
         placeBetFor(msg.sender, pick);
     }
 
@@ -88,6 +114,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function createGame(address payable _player, uint _bet, uint _pick) internal {
+
         _currentGame = _currentGame.add(1);
         Game memory newGame = Game ({
             id: _currentGame,
@@ -144,6 +171,16 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
             // emit gamePlayed event
         }
+        gas1 = 1;
+        gas2 = 1;
+        gas3 = 1;
+        gas4 = 1;
+        gas5 = 1;
+        gas6 = 1;
+        gas7 = 1;
+        gas8 = 1;
+        gas9 = 1;
+        gas10 = 1;
     }
 
     function requestRefund(uint gameID) public{
@@ -229,6 +266,17 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function testPlaceBetFor(address payable player, uint pick, uint256 testRandomNumber) public payable {
+      delete gas1;
+      delete gas2;
+      delete gas3;
+      delete gas4;
+      delete gas5;
+      delete gas6;
+      delete gas7;
+      delete gas8;
+      delete gas9;
+      delete gas10;
+
       require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
       require(pick <= maxPick, "Pick is too high. Choose a lower number.");
       require(betInRange(msg.value),"Outisde of bet range.");
@@ -264,6 +312,17 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
                 g.player.transfer(totalPayout);
             }
             // emit gamePlayed event
+
+            gas1 = 1;
+            gas2 = 1;
+            gas3 = 1;
+            gas4 = 1;
+            gas5 = 1;
+            gas6 = 1;
+            gas7 = 1;
+            gas8 = 1;
+            gas9 = 1;
+            gas10 = 1;
         }
     }
 
