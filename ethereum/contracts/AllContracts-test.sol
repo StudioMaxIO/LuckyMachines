@@ -264,9 +264,28 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function placeBetFor(address payable player, uint pick) public payable {
-        require(betPayable(msg.value), "Contract cannot pay win");
-        require(pick <= maxPick, "Pick is too high");
-        require(betInRange(msg.value),"Outisde of bet range");
+        // This will fail if machine conditions are not met
+        // Use safeBetFor if all conditions have not been verified
+        delete gas1;
+        delete gas2;
+        delete gas3;
+        delete gas4;
+        delete gas5;
+        delete gas6;
+        delete gas7;
+        delete gas8;
+        delete gas9;
+        delete gas10;
+
+        _unplayedBets = _unplayedBets.add(msg.value);
+        createGame(player, msg.value, pick);
+        playGame(_currentGame);
+    }
+
+    function safeBetFor(address payable player, uint pick) public payable {
+        require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
+        require(pick <= maxPick, "Pick is too high. Choose a lower number.");
+        require(betInRange(msg.value),"Outisde of bet range.");
 
         delete gas1;
         delete gas2;
@@ -319,6 +338,11 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         //randomResult = randomness;
         Game storage g = games[_gameRequests[requestId]];
         if(g.id > 0){
+            if(g.bet > maxBet) {
+                g.bet = maxBet;
+                // bet cannot be higher than max bet. If bet is placed for larger amount,
+                // excess value is lost to the contract.
+            }
             uint totalPayout = g.bet.mul(payout) + g.bet;
             require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
 
@@ -432,13 +456,9 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function testPlaceBetFor(address payable player, uint pick, uint256 testRandomNumber) public payable {
-      require(betPayable(msg.value), "Contract cannot pay win");
-      require(pick <= maxPick, "Pick is too high");
-      require(betInRange(msg.value),"Outisde of bet range");
-
-      _unplayedBets = _unplayedBets.add(msg.value);
-      createGame(player, msg.value, pick);
-      testPlayGame(_currentGame, testRandomNumber);
+        _unplayedBets = _unplayedBets.add(msg.value);
+        createGame(player, msg.value, pick);
+        testPlayGame(_currentGame, testRandomNumber);
     }
 
     function testPlayGame(uint gameID, uint256 testRandomNumber) internal {
