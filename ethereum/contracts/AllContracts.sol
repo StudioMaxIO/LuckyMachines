@@ -374,10 +374,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     // Owner Functions
 
-    function fundMachine() public payable {
-
-    }
-
     function setVRFCoordinator(address _vrfCoordinator) public onlyOwner {
         vrfCoordinator = _vrfCoordinator;
     }
