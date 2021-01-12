@@ -471,23 +471,44 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     function testFulfillRandomness(bytes32 requestId, uint256 randomness) internal {
         Game storage g = games[_gameRequests[requestId]];
         if(g.id > 0){
+            if(g.bet > maxBet) {
+                g.bet = maxBet;
+                // bet cannot be higher than max bet. If bet is placed for larger amount,
+                // excess value is lost to the contract.
+            }
             uint totalPayout = g.bet.mul(payout) + g.bet;
             require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
 
+            // update game with chosen number
             g.winner = randomness;
+
+            // set game to played
             g.played = true;
 
+            // remove from unplayed bets
             if(_unplayedBets >= g.bet) {
                 _unplayedBets -= g.bet;
             } else {
                 _unplayedBets = 0;
             }
 
+            // payout if winner (initial bet plus winnings)
             if (g.pick == g.winner) {
                 g.player.transfer(totalPayout);
             }
+
             // emit gamePlayed event
         }
+        gas1 = 1;
+        gas2 = 1;
+        gas3 = 1;
+        gas4 = 1;
+        gas5 = 1;
+        gas6 = 1;
+        gas7 = 1;
+        gas8 = 1;
+        gas9 = 1;
+        gas10 = 1;
     }
 
     function testCloseMachine() public onlyOwner {
