@@ -241,7 +241,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         payoutAddress = _payoutAddress;
     }
 
-    function withdrawyEth(uint amount) public onlyOwner {
+    function withdrawEth(uint amount) public onlyOwner {
         require ((address(this).balance - amount) >= _unplayedBets, "Can't withdraw unplayed bets");
         payoutAddress.transfer(amount);
     }

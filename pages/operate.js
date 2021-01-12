@@ -80,16 +80,39 @@ class Operate extends Component {
   };
 
   withdrawEth = async event => {
-    const luckyMachine = LuckyMachine(this.props.address);
-    // withdraw eth...
+    this.setState({ withdrawEthLoading: true });
+
+    try {
+      const accounts = await web3.eth.getAccounts();
+      const luckyMachine = await LuckyMachine(this.props.address);
+      await luckyMachine.methods
+        .withdrawEth(web3.utils.toWei(this.state.withdrawEthAmount, "ether"))
+        .send({
+          from: accounts[0]
+        });
+    } catch (err) {
+      this.setState({ withdrawEthErrorMessage: err.message });
+    }
+
     this.setState({
       withdrawEthLoading: false
     });
   };
 
   withdrawLink = async event => {
-    const luckyMachine = LuckyMachine(this.props.address);
-    // withdraw eth...
+    this.setState({ withdrawLinkLoading: true });
+    try {
+      const accounts = await web3.eth.getAccounts();
+      const luckyMachine = await LuckyMachine(this.props.address);
+      await luckyMachine.methods
+        .withdrawLink(web3.utils.toWei(this.state.withdrawLinkAmount, "ether"))
+        .send({
+          from: accounts[0]
+        });
+    } catch (err) {
+      this.setState({ withdrawLinkErrorMessage: err.message });
+    }
+
     this.setState({
       withdrawLinkLoading: false
     });
@@ -270,7 +293,6 @@ class Operate extends Component {
                       }
                     />
                   </Form.Field>
-
                   <Button
                     loading={this.state.withdrawLinkLoading}
                     primary="true"
