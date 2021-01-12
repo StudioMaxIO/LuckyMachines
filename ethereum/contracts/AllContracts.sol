@@ -411,14 +411,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         LINK = LinkTokenInterface(_linkAddress);
     }
 
-    function setMaxBet(uint _maxBet) public onlyOwner {
-        maxBet = _maxBet;
-    }
-
-    function setMinBet(uint _minBet) public onlyOwner {
-        minBet = _minBet;
-    }
-
     function setPayoutAddress(address payable _payoutAddress) public onlyOwner {
         payoutAddress = _payoutAddress;
     }
