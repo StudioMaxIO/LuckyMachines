@@ -40,7 +40,7 @@ class Factory extends Component {
 
   async getMachines() {
     const factory = await LuckyMachineFactory(
-      "0xEe708f7399331C6F506661FC6E43079b19817C45"
+      "0xdaae661B89Fc78105357D5ef483d3bbb5D192ee0"
     );
     const allMachines = await factory.methods.getMachines().call();
     const machines = [];

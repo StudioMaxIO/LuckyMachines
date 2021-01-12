@@ -68,7 +68,7 @@ class Operate extends Component {
   }
 
   updateBalances = async event => {
-    const luckyMachine = LuckyMachine(this.props.address);
+    const luckyMachine = await LuckyMachine(this.props.address);
     const ethBalance = await web3.eth.getBalance(this.props.address);
     const linkBalance = await luckyMachine.methods.getLinkBalance().call();
     const payoutAddress = await luckyMachine.methods.payoutAddress().call();
@@ -80,16 +80,44 @@ class Operate extends Component {
   };
 
   withdrawEth = async event => {
-    const luckyMachine = LuckyMachine(this.props.address);
-    // withdraw eth...
+    this.setState({ withdrawEthLoading: true });
+    this.setState({ withdrawEthErrorMessage: "" });
+    try {
+      const accounts = await web3.eth.getAccounts();
+      const luckyMachine = await LuckyMachine(this.props.address);
+      await luckyMachine.methods
+        .withdrawEth(web3.utils.toWei(this.state.withdrawEthAmount, "ether"))
+        .send({
+          from: accounts[0]
+        });
+      this.setState({ withdrawEthAmount: "" });
+      this.updateBalances();
+    } catch (err) {
+      this.setState({ withdrawEthErrorMessage: err.message });
+    }
+
     this.setState({
       withdrawEthLoading: false
     });
   };
 
   withdrawLink = async event => {
-    const luckyMachine = LuckyMachine(this.props.address);
-    // withdraw eth...
+    this.setState({ withdrawLinkLoading: true });
+    this.setState({ withdrawLinkErrorMessage: "" });
+    try {
+      const accounts = await web3.eth.getAccounts();
+      const luckyMachine = await LuckyMachine(this.props.address);
+      await luckyMachine.methods
+        .withdrawLink(web3.utils.toWei(this.state.withdrawLinkAmount, "ether"))
+        .send({
+          from: accounts[0]
+        });
+      this.setState({ withdrawLinkAmount: "" });
+      this.updateBalances();
+    } catch (err) {
+      this.setState({ withdrawLinkErrorMessage: err.message });
+    }
+
     this.setState({
       withdrawLinkLoading: false
     });
@@ -270,7 +298,6 @@ class Operate extends Component {
                       }
                     />
                   </Form.Field>
-
                   <Button
                     loading={this.state.withdrawLinkLoading}
                     primary="true"
