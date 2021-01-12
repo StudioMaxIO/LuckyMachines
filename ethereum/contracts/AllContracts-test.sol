@@ -302,7 +302,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         return 12345;
     }
 
-    function playGame(uint gameID) public {
+    function playGame(uint gameID) internal {
         require(games[gameID].played == false, "game already played");
         // get random number
         uint seed = 12345;
@@ -445,7 +445,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
       testPlayGame(_currentGame, testRandomNumber);
     }
 
-    function testPlayGame(uint gameID, uint256 testRandomNumber) public {
+    function testPlayGame(uint gameID, uint256 testRandomNumber) internal {
         require(games[gameID].played == false, "game already played");
         bytes32 reqID = keccak256(abi.encodePacked(now, block.difficulty, msg.sender));
         _gameRequests[reqID] = gameID;

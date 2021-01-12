@@ -302,7 +302,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         return 12345;
     }
 
-    function playGame(uint gameID) public {
+    function playGame(uint gameID) internal {
         require(games[gameID].played == false, "game already played");
         // get random number
         uint seed = 12345;
