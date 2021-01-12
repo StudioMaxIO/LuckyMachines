@@ -1,3 +1,9 @@
+pragma solidity ^0.6.0;
+
+// SPDX-License-Identifier: MIT
+import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 contract LuckyMachine is VRFConsumerBase, Ownable {
 
     using SafeMathChainlink for uint256;
@@ -235,13 +241,16 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         payoutAddress = _payoutAddress;
     }
 
+    function withdrawyEth(uint amount) public onlyOwner {
+        require ((address(this).balance - amount) >= _unplayedBets, "Can't withdraw unplayed bets");
+        payoutAddress.transfer(amount);
+    }
+
+    function withdrawLink(uint amount) public onlyOwner {
+        LINK.transfer(payoutAddress, amount);
+    }
+
     function closeMachine() public onlyOwner {
-
-        require (address(this).balance > _unplayedBets);
-
-        // Contract must retain any unplayed bets. If contract is unable to cover winnings or
-        // other catastrophic failure occurs, contract must be able to refund unplayed bets to players.
-
         uint availableContractBalance = address(this).balance.sub(_unplayedBets);
         payoutAddress.transfer(availableContractBalance);
 
@@ -266,17 +275,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function testPlaceBetFor(address payable player, uint pick, uint256 testRandomNumber) public payable {
-      delete gas1;
-      delete gas2;
-      delete gas3;
-      delete gas4;
-      delete gas5;
-      delete gas6;
-      delete gas7;
-      delete gas8;
-      delete gas9;
-      delete gas10;
-
       require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
       require(pick <= maxPick, "Pick is too high. Choose a lower number.");
       require(betInRange(msg.value),"Outisde of bet range.");
@@ -312,17 +310,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
                 g.player.transfer(totalPayout);
             }
             // emit gamePlayed event
-
-            gas1 = 1;
-            gas2 = 1;
-            gas3 = 1;
-            gas4 = 1;
-            gas5 = 1;
-            gas6 = 1;
-            gas7 = 1;
-            gas8 = 1;
-            gas9 = 1;
-            gas10 = 1;
         }
     }
 
