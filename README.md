@@ -6,4 +6,4 @@ Each machine must be funded with enough ETH to pay out any potential winnings pl
 
 Lucky Machines can be shut down at any time and all funds cashed out to the owner, although any unplayed bets cannot be withdrawn. Unplayed bets may be refunded to the player who placed the bet upon request to the contract.
 
-The minimum bet, maximum bet, number of pickable values, and payout amounts are set on a machine by machine basis, and can be customized to the owner's specification. Minimum and Maximum bets may be altered once the machine is generated, though pickable values and payout amounts are immutable. All machine properties are easily inspectable through public variables in the machine contract.
+The minimum bet, maximum bet, number of pickable values, and payout amounts are set on a machine by machine basis, and can initially be customized to the owner's specification. Once the machine is created these values cannot be changed. All machine properties are easily inspectable through public variables in the machine contract.
