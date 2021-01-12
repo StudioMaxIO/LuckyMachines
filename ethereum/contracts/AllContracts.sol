@@ -264,9 +264,9 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function placeBetFor(address payable player, uint pick) public payable {
-        require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
-        require(pick <= maxPick, "Pick is too high. Choose a lower number.");
-        require(betInRange(msg.value),"Outisde of bet range.");
+        require(betPayable(msg.value), "Contract cannot pay win");
+        require(pick <= maxPick, "Pick is too high");
+        require(betInRange(msg.value),"Outisde of bet range");
 
         delete gas1;
         delete gas2;
