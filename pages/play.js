@@ -93,10 +93,12 @@ class Play extends Component {
     try {
       const accounts = await web3.eth.getAccounts();
       const luckyMachine = LuckyMachine(String(this.props.address));
-      await luckyMachine.methods.placeBet(this.state.pick).send({
-        from: accounts[0],
-        value: web3.utils.toWei(String(this.state.bet), "ether")
-      });
+      await luckyMachine.methods
+        .placeBetFor(accounts[0], this.state.pick)
+        .send({
+          from: accounts[0],
+          value: web3.utils.toWei(String(this.state.bet), "ether")
+        });
 
       //Router.pushRoute("/workshop");
     } catch (err) {

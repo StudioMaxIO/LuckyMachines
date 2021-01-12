@@ -263,8 +263,9 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         return (address(this).balance.sub(_unplayedBets) >= bet.mul(payout).add(bet));
     }
 
-    function placeBet(uint pick) public payable{
-        // check that game can be played
+    function placeBetFor(address payable player, uint pick) public payable {
+        // This will fail if machine conditions are not met
+        // Use safeBetFor if all conditions have not been verified
         delete gas1;
         delete gas2;
         delete gas3;
@@ -275,17 +276,31 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         delete gas8;
         delete gas9;
         delete gas10;
-        placeBetFor(msg.sender, pick);
+
+        _unplayedBets = _unplayedBets.add(msg.value);
+        createGame(player, msg.value, pick);
+        playGame(_currentGame);
     }
 
-    function placeBetFor(address payable player, uint pick) public payable {
-      require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
-      require(pick <= maxPick, "Pick is too high. Choose a lower number.");
-      require(betInRange(msg.value),"Outisde of bet range.");
+    function safeBetFor(address payable player, uint pick) public payable {
+        require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
+        require(pick <= maxPick, "Pick is too high. Choose a lower number.");
+        require(betInRange(msg.value),"Outisde of bet range.");
 
-      _unplayedBets = _unplayedBets.add(msg.value);
-      createGame(player, msg.value, pick);
-      playGame(_currentGame);
+        delete gas1;
+        delete gas2;
+        delete gas3;
+        delete gas4;
+        delete gas5;
+        delete gas6;
+        delete gas7;
+        delete gas8;
+        delete gas9;
+        delete gas10;
+
+        _unplayedBets = _unplayedBets.add(msg.value);
+        createGame(player, msg.value, pick);
+        playGame(_currentGame);
     }
 
     function createGame(address payable _player, uint _bet, uint _pick) internal {
@@ -306,7 +321,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         return 12345;
     }
 
-    function playGame(uint gameID) public {
+    function playGame(uint gameID) internal {
         require(games[gameID].played == false, "game already played");
         // get random number
         uint seed = 12345;
@@ -322,7 +337,13 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         //randomResult = randomness;
         Game storage g = games[_gameRequests[requestId]];
-        if(g.id > 0){
+        if(g.id > 0 && g.bet >= minBet){
+            // bets lower than minimum will not get played, refunds can be requested
+            if(g.bet > maxBet) {
+                g.bet = maxBet;
+                // bet cannot be higher than max bet. If bet is placed for larger amount,
+                // excess value is lost to the contract.
+            }
             uint totalPayout = g.bet.mul(payout) + g.bet;
             require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
 
@@ -378,10 +399,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     // Owner Functions
 
-    function fundMachine() public payable {
-
-    }
-
     function setVRFCoordinator(address _vrfCoordinator) public onlyOwner {
         vrfCoordinator = _vrfCoordinator;
     }
@@ -392,14 +409,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     function setLINK(address _linkAddress) public onlyOwner {
         LINK = LinkTokenInterface(_linkAddress);
-    }
-
-    function setMaxBet(uint _maxBet) public onlyOwner {
-        maxBet = _maxBet;
-    }
-
-    function setMinBet(uint _minBet) public onlyOwner {
-        minBet = _minBet;
     }
 
     function setPayoutAddress(address payable _payoutAddress) public onlyOwner {
@@ -440,16 +449,12 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function testPlaceBetFor(address payable player, uint pick, uint256 testRandomNumber) public payable {
-      require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
-      require(pick <= maxPick, "Pick is too high. Choose a lower number.");
-      require(betInRange(msg.value),"Outisde of bet range.");
-
-      _unplayedBets = _unplayedBets.add(msg.value);
-      createGame(player, msg.value, pick);
-      testPlayGame(_currentGame, testRandomNumber);
+        _unplayedBets = _unplayedBets.add(msg.value);
+        createGame(player, msg.value, pick);
+        testPlayGame(_currentGame, testRandomNumber);
     }
 
-    function testPlayGame(uint gameID, uint256 testRandomNumber) public {
+    function testPlayGame(uint gameID, uint256 testRandomNumber) internal {
         require(games[gameID].played == false, "game already played");
         bytes32 reqID = keccak256(abi.encodePacked(now, block.difficulty, msg.sender));
         _gameRequests[reqID] = gameID;
@@ -458,24 +463,45 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     function testFulfillRandomness(bytes32 requestId, uint256 randomness) internal {
         Game storage g = games[_gameRequests[requestId]];
-        if(g.id > 0){
+        if(g.id > 0 && g.bet >= minBet){
+            if(g.bet > maxBet) {
+                g.bet = maxBet;
+                // bet cannot be higher than max bet. If bet is placed for larger amount,
+                // excess value is lost to the contract.
+            }
             uint totalPayout = g.bet.mul(payout) + g.bet;
             require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
 
+            // update game with chosen number
             g.winner = randomness;
+
+            // set game to played
             g.played = true;
 
+            // remove from unplayed bets
             if(_unplayedBets >= g.bet) {
                 _unplayedBets -= g.bet;
             } else {
                 _unplayedBets = 0;
             }
 
+            // payout if winner (initial bet plus winnings)
             if (g.pick == g.winner) {
                 g.player.transfer(totalPayout);
             }
+
             // emit gamePlayed event
         }
+        gas1 = 1;
+        gas2 = 1;
+        gas3 = 1;
+        gas4 = 1;
+        gas5 = 1;
+        gas6 = 1;
+        gas7 = 1;
+        gas8 = 1;
+        gas9 = 1;
+        gas10 = 1;
     }
 
     function testCloseMachine() public onlyOwner {
