@@ -203,8 +203,8 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     uint public maxPick;
     uint public maxBet;
     uint public minBet;
-    uint public _unplayedBets;
-    uint public _currentGame;
+    uint private _unplayedBets;
+    uint private _currentGame;
     address payable public payoutAddress;
     uint public payout; // Multiplier, e.g. 10X: payout (10) * bet (X)
 
@@ -248,7 +248,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         return LINK.balanceOf(address(this));
     }
 
-    function betInRange(uint bet) public view returns(bool){
+    function betInRange(uint bet) internal view returns(bool){
         if (bet >= minBet && bet <= maxBet) {
             // At a minimum this contract should have enough to cover any potential winnings plus refund unplayed bets
             // preferable to complte all games, but in case oracle becomes unreachable or other catastrophic incident occurs,
@@ -259,7 +259,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         }
     }
 
-    function betPayable(uint bet) public view returns(bool){
+    function betPayable(uint bet) internal view returns(bool){
         return (address(this).balance.sub(_unplayedBets) >= bet.mul(payout).add(bet));
     }
 
@@ -330,7 +330,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         _gameRequests[reqID] = gameID;
     }
 
-    function getRandomNumber(uint256 seed) public returns (bytes32 requestId) {
+    function getRandomNumber(uint256 seed) internal returns (bytes32 requestId) {
         require(LINK.balanceOf(address(this)) > fee, "Not enough LINK");
         return requestRandomness(keyHash, fee, seed);
     }
