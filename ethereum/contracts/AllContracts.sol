@@ -203,8 +203,8 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     uint public maxPick;
     uint public maxBet;
     uint public minBet;
-    uint public _unplayedBets;
-    uint public _currentGame;
+    uint private _unplayedBets;
+    uint private _currentGame;
     address payable public payoutAddress;
     uint public payout; // Multiplier, e.g. 10X: payout (10) * bet (X)
 
@@ -248,7 +248,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         return LINK.balanceOf(address(this));
     }
 
-    function betInRange(uint bet) public view returns(bool){
+    function betInRange(uint bet) internal view returns(bool){
         if (bet >= minBet && bet <= maxBet) {
             // At a minimum this contract should have enough to cover any potential winnings plus refund unplayed bets
             // preferable to complte all games, but in case oracle becomes unreachable or other catastrophic incident occurs,
@@ -259,13 +259,14 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         }
     }
 
-    function betPayable(uint bet) public view returns(bool){
+    function betPayable(uint bet) internal view returns(bool){
         return (address(this).balance.sub(_unplayedBets) >= bet.mul(payout).add(bet));
     }
 
     function placeBetFor(address payable player, uint pick) public payable {
         // This will fail if machine conditions are not met
         // Use safeBetFor if all conditions have not been verified
+        require(msg.value >= minBet, "minimum bet not met");
         delete gas1;
         delete gas2;
         delete gas3;
@@ -329,7 +330,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         _gameRequests[reqID] = gameID;
     }
 
-    function getRandomNumber(uint256 seed) public returns (bytes32 requestId) {
+    function getRandomNumber(uint256 seed) internal returns (bytes32 requestId) {
         require(LINK.balanceOf(address(this)) > fee, "Not enough LINK");
         return requestRandomness(keyHash, fee, seed);
     }
@@ -337,8 +338,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         //randomResult = randomness;
         Game storage g = games[_gameRequests[requestId]];
-        if(g.id > 0 && g.bet >= minBet){
-            // bets lower than minimum will not get played, refunds can be requested
+        if(g.id > 0){
             if(g.bet > maxBet) {
                 g.bet = maxBet;
                 // bet cannot be higher than max bet. If bet is placed for larger amount,
@@ -432,6 +432,10 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             LINK.transfer(payoutAddress, LINK.balanceOf(address(this)));
         }
 
+    }
+
+    function replayGame(uint gameID) public onlyOwner {
+        playGame(gameID);
     }
 }
 
