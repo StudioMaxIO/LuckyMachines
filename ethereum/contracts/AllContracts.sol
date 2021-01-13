@@ -266,6 +266,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     function placeBetFor(address payable player, uint pick) public payable {
         // This will fail if machine conditions are not met
         // Use safeBetFor if all conditions have not been verified
+        require(msg.value >= minBet, "minimum bet not met");
         delete gas1;
         delete gas2;
         delete gas3;
@@ -337,8 +338,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         //randomResult = randomness;
         Game storage g = games[_gameRequests[requestId]];
-        if(g.id > 0 && g.bet >= minBet){
-            // bets lower than minimum will not get played, refunds can be requested
+        if(g.id > 0){
             if(g.bet > maxBet) {
                 g.bet = maxBet;
                 // bet cannot be higher than max bet. If bet is placed for larger amount,
@@ -432,6 +432,10 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             LINK.transfer(payoutAddress, LINK.balanceOf(address(this)));
         }
 
+    }
+
+    function replayGame(uint gameID) public onlyOwner {
+        playGame(gameID);
     }
 }
 

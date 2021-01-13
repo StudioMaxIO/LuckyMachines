@@ -266,6 +266,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     function placeBetFor(address payable player, uint pick) public payable {
         // This will fail if machine conditions are not met
         // Use safeBetFor if all conditions have not been verified
+        require(msg.value >= minBet, "minimum bet not met");
         delete gas1;
         delete gas2;
         delete gas3;
@@ -337,8 +338,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         //randomResult = randomness;
         Game storage g = games[_gameRequests[requestId]];
-        if(g.id > 0 && g.bet >= minBet){
-            // bets lower than minimum will not get played, refunds can be requested
+        if(g.id > 0){
             if(g.bet > maxBet) {
                 g.bet = maxBet;
                 // bet cannot be higher than max bet. If bet is placed for larger amount,
@@ -434,6 +434,10 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     }
 
+    function replayGame(uint gameID) public onlyOwner {
+        playGame(gameID);
+    }
+
     // TEST FUNCTIONS
     // DO NOT COMPILE FINAL CONTRACT WITH THESE, FOR TESTING ONLY!!!
     function testCreateGame(address payable _player, uint _bet, uint _pick, bool _played, uint _gameID) public {
@@ -449,6 +453,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     function testPlaceBetFor(address payable player, uint pick, uint256 testRandomNumber) public payable {
+        require(msg.value >= minBet, "minimum bet not met");
         _unplayedBets = _unplayedBets.add(msg.value);
         createGame(player, msg.value, pick);
         testPlayGame(_currentGame, testRandomNumber);
@@ -463,7 +468,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     function testFulfillRandomness(bytes32 requestId, uint256 randomness) internal {
         Game storage g = games[_gameRequests[requestId]];
-        if(g.id > 0 && g.bet >= minBet){
+        if(g.id > 0){
             if(g.bet > maxBet) {
                 g.bet = maxBet;
                 // bet cannot be higher than max bet. If bet is placed for larger amount,
