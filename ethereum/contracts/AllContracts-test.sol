@@ -307,6 +307,18 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         playGame(_currentGame);
     }
 
+    function gasFreeBetFor(address payable player, uint pick) public payable {
+        // This does not check for payout plus gas fees
+        // If contract balance is too low to cover both,
+        // game will be stuck unplayed.
+        uint256 startGas = gasleft();
+        require(gasFreeBetAllowed[player], "gas free bet not allowed");
+        safeBetFor(player, pick);
+        uint256 gasUsed = startGas - gasleft();
+        uint gasPrice = tx.gasprice;
+        msg.sender.transfer(gasUsed.mul(gasPrice));
+    }
+
     function createGame(address payable _player, uint _bet, uint _pick) internal {
 
         _currentGame = _currentGame.add(1);
