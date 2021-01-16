@@ -92,7 +92,7 @@ class Play extends Component {
 
     try {
       const accounts = await web3.eth.getAccounts();
-      const luckyMachine = LuckyMachine(String(this.props.address));
+      const luckyMachine = await LuckyMachine(String(this.props.address));
       await luckyMachine.methods
         .placeBetFor(accounts[0], this.state.pick)
         .send({
