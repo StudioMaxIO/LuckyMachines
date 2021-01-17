@@ -208,8 +208,11 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     address payable public payoutAddress;
     uint public payout; // Multiplier, e.g. 10X: payout (10) * bet (X)
 
+    mapping(address => bool) public authorizedAddress;
+    mapping(address => bool) public gasFreeBetAllowed;
+
     mapping(uint => Game) public games;
-    mapping(bytes32 => uint) public _gameRequests;
+    mapping(bytes32 => uint) private _gameRequests;
 
     constructor(address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout)
         //KOVAN ADDRESSES, can be updated by owner once contract created
@@ -302,6 +305,18 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         _unplayedBets = _unplayedBets.add(msg.value);
         createGame(player, msg.value, pick);
         playGame(_currentGame);
+    }
+
+    function gasFreeBetFor(address payable player, uint pick) public payable {
+        // This does not check for payout plus gas fees
+        // If contract balance is too low to cover both,
+        // game will be stuck unplayed.
+        uint256 startGas = gasleft();
+        require(gasFreeBetAllowed[player], "gas free bet not allowed");
+        safeBetFor(player, pick);
+        uint256 gasUsed = startGas - gasleft();
+        uint gasPrice = tx.gasprice;
+        msg.sender.transfer(gasUsed.mul(gasPrice));
     }
 
     function createGame(address payable _player, uint _bet, uint _pick) internal {
@@ -397,7 +412,19 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         return(minBet, maxBet, payout, maxPick);
     }
 
+    // Authorized Functions
+    function allowGasFreeBet(address[] memory userAddresses, bool allowed) public {
+        require(authorizedAddress[msg.sender] || owner() == msg.sender, "Not authorized to set gas free bet");
+        for (uint i = 0; i < userAddresses.length; i++){
+            gasFreeBetAllowed[userAddresses[i]] = allowed;
+        }
+    }
+
     // Owner Functions
+
+    function setAuthorizedUser(address userAddress, bool authorized) public onlyOwner {
+        authorizedAddress[userAddress] = authorized;
+    }
 
     function setVRFCoordinator(address _vrfCoordinator) public onlyOwner {
         vrfCoordinator = _vrfCoordinator;
