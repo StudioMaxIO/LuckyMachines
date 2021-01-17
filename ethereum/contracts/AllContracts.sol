@@ -218,7 +218,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     event GamePlayed(address _player, uint256 _bet, uint256 _pick, uint256 _winner, uint256 _payout);
 
     constructor(address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout)
-        //KOVAN ADDRESSES, can be updated by owner once contract created
+        //KOVAN ADDRESSES
         VRFConsumerBase(
             0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
             0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
@@ -251,28 +251,40 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     }
 
+    modifier onlyAuthorized() {
+        require(owner() == msg.sender || authorizedAddress[msg.sender], "caller is not authorized");
+        _;
+    }
+
     function getLinkBalance() public view returns(uint){
         return LINK.balanceOf(address(this));
     }
 
+    /**
+     * @dev Returns whether bet is within range of minimum and maximum
+     * allowable bets
+     */
     function betInRange(uint bet) internal view returns(bool){
         if (bet >= minBet && bet <= maxBet) {
-            // At a minimum this contract should have enough to cover any potential winnings plus refund unplayed bets
-            // preferable to complte all games, but in case oracle becomes unreachable or other catastrophic incident occurs,
-            // bets should be refunded.
             return true;
         } else {
             return false;
         }
     }
 
+    /**
+     * @dev Returns whether a winning bet can by paid out by machine. Balance of
+     * machine must be at least value of bet + (value of bet * payout).
+     */
     function betPayable(uint bet) internal view returns(bool){
         return (address(this).balance.sub(_unplayedBets) >= bet.mul(payout).add(bet));
     }
 
+    /**
+     * @dev This will fail if machine conditions are not met.
+     * Use safeBetFor() if all conditions have not been pre-verified.
+     */
     function placeBetFor(address payable player, uint pick) public payable {
-        // This will fail if machine conditions are not met
-        // Use safeBetFor if all conditions have not been verified
         require(msg.value >= minBet, "minimum bet not met");
         if(gas1 == 1) {
             delete gas1;
@@ -293,9 +305,12 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         playGame(_currentGame);
     }
 
+    /**
+     * @dev Places bet after ensuring all conditions are met (bet within minimum - maximum
+     * range, maximum pick not exceeded, winning bet is payable).
+     */
     function safeBetFor(address payable player, uint pick) public payable {
         require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
-        require(msg.value >= minBet, "Minimum bet not met");
         require(pick <= maxPick && pick > 0, "Outside of pickable bounds");
         require(betInRange(msg.value),"Outisde of bet range.");
 
@@ -331,6 +346,9 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         msg.sender.transfer(gasUsed.mul(gasPrice));
     }*/
 
+    /**
+     * @dev Creates a Game record, which is updated as game is played.
+     */
     function createGame(address payable _player, uint _bet, uint _pick) internal {
 
         _currentGame = _currentGame.add(1);
@@ -345,48 +363,60 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         games[newGame.id] = newGame;
     }
 
+    /**
+     * @dev Generates a seed to use for the VRF randomness
+     */
     function getSeed() internal view returns(uint256) {
         Game memory g = games[_currentGame];
         return uint(keccak256(abi.encodePacked(block.number, now, g.pick, g.bet, g.id)));
     }
 
+    /**
+     * @dev If game is ready to be played, but random number not yet generated,
+     * this function may be called. Limited to only when bet is placed to avoid
+     * over-calling / over-spending Link since random number is generated with
+     * each call of this. replayGame() may be called by owner in cases of "stuck"
+     * or unplayed games.
+     */
     function playGame(uint gameID) internal {
         require(games[gameID].played == false, "game already played");
         bytes32 reqID = getRandomNumber(getSeed());
         _gameRequests[reqID] = gameID;
     }
 
+    /**
+     * @dev Requests a random number, which will be returned through the
+     * fulfillRandomness() function.
+     */
     function getRandomNumber(uint256 seed) internal returns (bytes32 requestId) {
         require(LINK.balanceOf(address(this)) > fee, "Not enough LINK");
         return requestRandomness(keyHash, fee, seed);
     }
 
+    /**
+     * @dev Called by VRF Coordinator only once number is generated. Gas reserves are
+     * refilled here so they can be cleared for gas savings when next bet is placed.
+     */
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         //randomResult = randomness;
         Game storage g = games[_gameRequests[requestId]];
         if(g.id > 0){
             if(g.bet > maxBet) {
                 g.bet = maxBet;
-                // bet cannot be higher than max bet. If bet is placed for larger amount,
-                // excess value is lost to the contract.
             }
             uint totalPayout = g.bet.mul(payout).add(g.bet);
             require(address(this).balance >= totalPayout, "Contract balance too low to play");
 
-            // update game with chosen number
             g.winner = randomness.mod(maxPick).add(1);
 
-            // set game to played
             g.played = true;
 
-            // remove from unplayed bets
             if(_unplayedBets >= g.bet) {
                 _unplayedBets -= g.bet;
             } else {
                 _unplayedBets = 0;
             }
 
-            // payout if winner (initial bet plus winnings)
             if (g.pick == g.winner) {
                 g.player.transfer(totalPayout);
             } else {
@@ -408,8 +438,25 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         gas11 = 1;
     }
 
+    /**
+     * @dev Returns summary of machine requirements for play and payout multiplier.
+     */
+    function getSummary() public view returns(uint, uint, uint, uint) {
+        //minBet, maxBet, payout, maxPick
+        return(minBet, maxBet, payout, maxPick);
+    }
+
+    // Authorized Functions
+    /**
+     * @dev Request a refund for an unplayed game. If game is created, but
+     * machine conditions are not appropriate to allow play, no number will
+     * be generated and player or authorized address can request refund.
+     * Regardless of who requests refund, payout will always be to player
+     * listed in game.
+     */
     function requestRefund(uint gameID) public{
         Game storage g = games[gameID];
+        require(authorizedAddress[msg.sender] || owner() == msg.sender || g.player == msg.sender, "Not authorized to request refund");
         require(g.played == false, "Game already complete. No refund possible.");
         require(address(this).balance >= g.bet, "Contract balance too low. Please try again later.");
         g.played = true;
@@ -421,50 +468,80 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         g.player.transfer(g.bet);
     }
 
-    function getSummary() public view returns(uint, uint, uint, uint) {
-        //minBet, maxBet, payout, maxPick
-        return(minBet, maxBet, payout, maxPick);
-    }
-
-    // Authorized Functions
-    function allowGasFreeBet(address[] memory userAddresses, bool allowed) public {
-        require(authorizedAddress[msg.sender] || owner() == msg.sender, "Not authorized to set gas free bet");
+    /**
+     * @dev Set group of addresses to be eligible for gas free bets. Note: currently
+     * gasFreeBetFor() not enabled, however this value could be checked by operator
+     * and bets placed on behalf of user, thereby covring the gas costs.
+     */
+    function allowGasFreeBet(address[] memory userAddresses, bool allowed) public onlyAuthorized{
         for (uint i = 0; i < userAddresses.length; i++){
             gasFreeBetAllowed[userAddresses[i]] = allowed;
         }
     }
 
-    // Owner Functions
-
-    function setAuthorizedUser(address userAddress, bool authorized) public onlyOwner {
-        authorizedAddress[userAddress] = authorized;
-    }
-
-    function setVRFCoordinator(address _vrfCoordinator) public onlyOwner {
-        vrfCoordinator = _vrfCoordinator;
-    }
-
-    function setKeyHash(bytes32 _keyHash) public onlyOwner {
-        keyHash = _keyHash;
-    }
-
-    function setLINK(address _linkAddress) public onlyOwner {
-        LINK = LinkTokenInterface(_linkAddress);
-    }
-
-    function setPayoutAddress(address payable _payoutAddress) public onlyOwner {
-        payoutAddress = _payoutAddress;
-    }
-
-    function withdrawEth(uint amount) public onlyOwner {
+    /**
+     * @dev Withdraw specified amount of ETH from machine. Amount must be less than
+     * any unplayed bets in machine to allow for refunds.
+     */
+    function withdrawEth(uint amount) public onlyAuthorized {
         require ((address(this).balance - amount) >= _unplayedBets, "Can't withdraw unplayed bets");
         payoutAddress.transfer(amount);
     }
 
-    function withdrawLink(uint amount) public onlyOwner {
+    /**
+     * @dev Withdraw specified amount of LINK from machine.
+     */
+    function withdrawLink(uint amount) public onlyAuthorized {
         LINK.transfer(payoutAddress, amount);
     }
 
+    // Owner Functions
+    /**
+     * @dev Add any address as authorized user. Can be used to whitelist other contracts
+     * that may want to interact with authorized functions.
+     */
+    function setAuthorizedUser(address userAddress, bool authorized) public onlyOwner {
+        authorizedAddress[userAddress] = authorized;
+    }
+
+    /**
+     * @dev Can update vrfCoordinator if access to node is compromised. This should not
+     * be updated unless you are sure what you are doing.
+     */
+    function setVRFCoordinator(address _vrfCoordinator) public onlyOwner {
+        vrfCoordinator = _vrfCoordinator;
+    }
+
+    /**
+     * @dev Can update keyHash if access to node is compromised. This should not
+     * be updated unless you are sure what you are doing.
+     */
+    function setKeyHash(bytes32 _keyHash) public onlyOwner {
+        keyHash = _keyHash;
+    }
+
+    /**
+     * @dev Can update LINK address if necessary. Should not have to call this, but here
+     * in case testnet address is set or token address updated for any reason.
+     */
+    function setLINK(address _linkAddress) public onlyOwner {
+        LINK = LinkTokenInterface(_linkAddress);
+    }
+
+    /**
+     * @dev Updates the address to which all withdrawals of ETH & LINK will be sent. If
+     * machine is closed (all funds withdrawn), this address receives all available funds.
+     */
+    function setPayoutAddress(address payable _payoutAddress) public onlyOwner {
+        payoutAddress = _payoutAddress;
+    }
+
+    /**
+     * @dev Withdraws all available funds from the machine, leaving behind only
+     * _unplayedBets, which must remain for any refund requests. This does not
+     * do anything to halt operations other than removing funding, which
+     * automatically disallows play. If machine is re-funded, play may continue.
+     */
     function closeMachine() public onlyOwner {
         uint availableContractBalance = address(this).balance.sub(_unplayedBets);
         payoutAddress.transfer(availableContractBalance);
@@ -475,6 +552,11 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     }
 
+    /**
+     * @dev Option to replay any games that may have been created, but unable to complete initial
+     * play for some reason. Unplayed games may be refunded or replayed until the number has been
+     * generated and game is marked as played.
+     */
     function replayGame(uint gameID) public onlyOwner {
         playGame(gameID);
     }
@@ -483,8 +565,11 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 contract LuckyMachineFactory{
     address[] public machines;
 
+    /**
+     * @dev Used to create a LuckyMachine that can be verified and included in the
+     * factory list.
+     */
     function createMachine(uint maxBet, uint minBet, uint maxPick, uint payout) public returns(address){
-        //address payable _owner, uint _maxBet, uint _minBet, uint _maxPick, uint _payout
         LuckyMachine newMachine = new LuckyMachine(msg.sender, maxBet, minBet, maxPick, payout);
         newMachine.transferOwnership(msg.sender);
         address newMachineAddress = address(newMachine);
@@ -492,6 +577,10 @@ contract LuckyMachineFactory{
         return newMachineAddress;
     }
 
+    /**
+     * @dev Returns a list of all machines created from this factory. Useful to verify
+     * a machine was setup appropriately and is a "legitimate" LuckyMachine.
+     */
     function getMachines() public view returns (address[] memory) {
         return machines;
     }
