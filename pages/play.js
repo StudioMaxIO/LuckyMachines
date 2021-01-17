@@ -65,7 +65,7 @@ class Play extends Component {
   displayPickerValues() {
     const final = [];
     console.log("Max pick: ", this.props.maximumPick);
-    for (var i = 0; i < Number(this.props.maximumPick) + 1; i++) {
+    for (var i = 1; i < Number(this.props.maximumPick) + 1; i++) {
       final.push(
         <Button
           size="mini"
