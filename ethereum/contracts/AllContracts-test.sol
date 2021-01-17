@@ -362,7 +362,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
                 // bet cannot be higher than max bet. If bet is placed for larger amount,
                 // excess value is lost to the contract.
             }
-            uint totalPayout = g.bet.mul(payout) + g.bet;
+            uint totalPayout = g.bet.mul(payout).add(g.bet);
             require(address(this).balance >= totalPayout, "Contract balance too low to play");
 
             // update game with chosen number
@@ -504,7 +504,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             if(g.bet > maxBet) {
                 g.bet = maxBet;
             }
-            uint totalPayout = g.bet.mul(payout) + g.bet;
+            uint totalPayout = g.bet.mul(payout).add(g.bet);
             require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
 
             g.winner = randomness;
