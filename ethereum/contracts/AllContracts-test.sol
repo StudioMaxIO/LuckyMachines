@@ -200,15 +200,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     uint private gas9;
     uint private gas10;
     uint private gas11;
-    uint private gas12;
-    uint private gas13;
-    uint private gas14;
-    uint private gas15;
-    uint private gas16;
-    uint private gas17;
-    uint private gas18;
-    uint private gas19;
-    uint private gas20;
 
     uint public maxPick;
     uint public maxBet;
@@ -308,23 +299,26 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         require(pick <= maxPick && pick > 0, "Outside of pickable bounds");
         require(betInRange(msg.value),"Outisde of bet range.");
 
-        delete gas1;
-        delete gas2;
-        delete gas3;
-        delete gas4;
-        delete gas5;
-        delete gas6;
-        delete gas7;
-        delete gas8;
-        delete gas9;
-        delete gas10;
-        delete gas11;
+        if(gas1 == 1) {
+            delete gas1;
+            delete gas2;
+            delete gas3;
+            delete gas4;
+            delete gas5;
+            delete gas6;
+            delete gas7;
+            delete gas8;
+            delete gas9;
+            delete gas10;
+            delete gas11;
+        }
 
         _unplayedBets = _unplayedBets.add(msg.value);
         createGame(player, msg.value, pick);
         playGame(_currentGame);
     }
 
+    /* Not ready or tested for production
     function gasFreeBetFor(address payable player, uint pick) public payable {
         // This does not check for payout plus gas fees
         // If contract balance is too low to cover both,
@@ -335,7 +329,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         uint256 gasUsed = startGas - gasleft();
         uint gasPrice = tx.gasprice;
         msg.sender.transfer(gasUsed.mul(gasPrice));
-    }
+    }*/
 
     function createGame(address payable _player, uint _bet, uint _pick) internal {
 
