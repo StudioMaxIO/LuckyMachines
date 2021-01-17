@@ -45,6 +45,8 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     mapping(uint => Game) public games;
     mapping(bytes32 => uint) private _gameRequests;
 
+    event GamePlayed(address _player, uint256 _bet, uint256 _pick, uint256 _winner, uint256 _payout);
+
     constructor(address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout)
         //KOVAN ADDRESSES, can be updated by owner once contract created
         VRFConsumerBase(
@@ -209,9 +211,11 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             // payout if winner (initial bet plus winnings)
             if (g.pick == g.winner) {
                 g.player.transfer(totalPayout);
+            } else {
+                totalPayout = 0;
             }
 
-            // emit gamePlayed event
+            emit GamePlayed(g.player, g.bet, g.pick, g.winner, totalPayout);
         }
         gas1 = 1;
         gas2 = 1;
@@ -294,83 +298,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     function replayGame(uint gameID) public onlyOwner {
         playGame(gameID);
-    }
-
-    // TEST FUNCTIONS
-    // DO NOT COMPILE FINAL CONTRACT WITH THESE, FOR TESTING ONLY!!!
-    function testCreateGame(address payable _player, uint _bet, uint _pick, bool _played, uint _gameID) public {
-        Game memory newGame = Game ({
-            id: _gameID,
-            player: _player,
-            bet: _bet,
-            pick: _pick,
-            winner: maxPick.add(10), //TODO: use 0, don't allow 0 as pickable value
-            played: _played
-        });
-        games[newGame.id] = newGame;
-    }
-
-    function testPlaceBetFor(address payable player, uint pick, uint256 testRandomNumber) public payable {
-        require(msg.value >= minBet, "minimum bet not met");
-        _unplayedBets = _unplayedBets.add(msg.value);
-        createGame(player, msg.value, pick);
-        testPlayGame(_currentGame, testRandomNumber);
-    }
-
-    function testPlayGame(uint gameID, uint256 testRandomNumber) internal {
-        require(games[gameID].played == false, "game already played");
-        bytes32 reqID = keccak256(abi.encodePacked(now, block.difficulty, msg.sender));
-        _gameRequests[reqID] = gameID;
-        testFulfillRandomness(reqID, testRandomNumber);
-    }
-
-    function testFulfillRandomness(bytes32 requestId, uint256 randomness) internal {
-        Game storage g = games[_gameRequests[requestId]];
-        if(g.id > 0){
-            if(g.bet > maxBet) {
-                g.bet = maxBet;
-                // bet cannot be higher than max bet. If bet is placed for larger amount,
-                // excess value is lost to the contract.
-            }
-            uint totalPayout = g.bet.mul(payout) + g.bet;
-            require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
-
-            // update game with chosen number
-            g.winner = randomness;
-
-            // set game to played
-            g.played = true;
-
-            // remove from unplayed bets
-            if(_unplayedBets >= g.bet) {
-                _unplayedBets -= g.bet;
-            } else {
-                _unplayedBets = 0;
-            }
-
-            // payout if winner (initial bet plus winnings)
-            if (g.pick == g.winner) {
-                g.player.transfer(totalPayout);
-            }
-
-            // emit gamePlayed event
-        }
-        gas1 = 1;
-        gas2 = 1;
-        gas3 = 1;
-        gas4 = 1;
-        gas5 = 1;
-        gas6 = 1;
-        gas7 = 1;
-        gas8 = 1;
-        gas9 = 1;
-        gas10 = 1;
-    }
-
-    function testCloseMachine() public onlyOwner {
-        require (address(this).balance > _unplayedBets);
-        uint availableContractBalance = address(this).balance.sub(_unplayedBets);
-        payoutAddress.transfer(availableContractBalance);
     }
 }
 
