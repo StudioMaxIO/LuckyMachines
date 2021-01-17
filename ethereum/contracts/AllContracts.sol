@@ -199,6 +199,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     uint private gas8;
     uint private gas9;
     uint private gas10;
+    uint private gas11;
 
     uint public maxPick;
     uint public maxBet;
@@ -243,6 +244,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             gas8 = 1;
             gas9 = 1;
             gas10 = 1;
+            gas11 = 1;
     }
 
     receive() external payable {
@@ -272,16 +274,19 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         // This will fail if machine conditions are not met
         // Use safeBetFor if all conditions have not been verified
         require(msg.value >= minBet, "minimum bet not met");
-        delete gas1;
-        delete gas2;
-        delete gas3;
-        delete gas4;
-        delete gas5;
-        delete gas6;
-        delete gas7;
-        delete gas8;
-        delete gas9;
-        delete gas10;
+        if(gas1 == 1) {
+            delete gas1;
+            delete gas2;
+            delete gas3;
+            delete gas4;
+            delete gas5;
+            delete gas6;
+            delete gas7;
+            delete gas8;
+            delete gas9;
+            delete gas10;
+            delete gas11;
+        }
 
         _unplayedBets = _unplayedBets.add(msg.value);
         createGame(player, msg.value, pick);
@@ -294,22 +299,26 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         require(pick <= maxPick && pick > 0, "Outside of pickable bounds");
         require(betInRange(msg.value),"Outisde of bet range.");
 
-        delete gas1;
-        delete gas2;
-        delete gas3;
-        delete gas4;
-        delete gas5;
-        delete gas6;
-        delete gas7;
-        delete gas8;
-        delete gas9;
-        delete gas10;
+        if(gas1 == 1) {
+            delete gas1;
+            delete gas2;
+            delete gas3;
+            delete gas4;
+            delete gas5;
+            delete gas6;
+            delete gas7;
+            delete gas8;
+            delete gas9;
+            delete gas10;
+            delete gas11;
+        }
 
         _unplayedBets = _unplayedBets.add(msg.value);
         createGame(player, msg.value, pick);
         playGame(_currentGame);
     }
 
+    /* Not ready or tested for production
     function gasFreeBetFor(address payable player, uint pick) public payable {
         // This does not check for payout plus gas fees
         // If contract balance is too low to cover both,
@@ -320,7 +329,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         uint256 gasUsed = startGas - gasleft();
         uint gasPrice = tx.gasprice;
         msg.sender.transfer(gasUsed.mul(gasPrice));
-    }
+    }*/
 
     function createGame(address payable _player, uint _bet, uint _pick) internal {
 
@@ -396,6 +405,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         gas8 = 1;
         gas9 = 1;
         gas10 = 1;
+        gas11 = 1;
     }
 
     function requestRefund(uint gameID) public{
