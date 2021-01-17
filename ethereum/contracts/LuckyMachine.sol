@@ -121,7 +121,8 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     function safeBetFor(address payable player, uint pick) public payable {
         require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
-        require(pick <= maxPick, "Pick is too high. Choose a lower number.");
+        require(msg.value >= minBet, "Minimum bet not met");
+        require(pick <= maxPick && pick > 0, "Outside of pickable bounds");
         require(betInRange(msg.value),"Outisde of bet range.");
 
         delete gas1;
@@ -160,7 +161,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             player: _player,
             bet: _bet,
             pick: _pick,
-            winner: maxPick.add(10), //TODO: use 0, don't allow 0 as pickable value
+            winner: 0,
             played: false
         });
         games[newGame.id] = newGame;
@@ -193,10 +194,10 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
                 // excess value is lost to the contract.
             }
             uint totalPayout = g.bet.mul(payout) + g.bet;
-            require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
+            require(address(this).balance >= totalPayout, "Contract balance too low to play");
 
             // update game with chosen number
-            g.winner = randomness.mod(maxPick.add(1));
+            g.winner = randomness.mod(maxPick).add(1);
 
             // set game to played
             g.played = true;
