@@ -336,7 +336,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         games[newGame.id] = newGame;
     }
 
-    function getSeed() public view returns(uint256) {
+    function getSeed() internal view returns(uint256) {
         Game memory g = games[_currentGame];
         return uint(keccak256(abi.encodePacked(block.number, now, g.pick, g.bet, g.id)));
     }
