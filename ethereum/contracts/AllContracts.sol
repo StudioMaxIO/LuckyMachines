@@ -214,6 +214,8 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     mapping(uint => Game) public games;
     mapping(bytes32 => uint) private _gameRequests;
 
+    event GamePlayed(address _player, uint256 _bet, uint256 _pick, uint256 _winner, uint256 _payout);
+
     constructor(address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout)
         //KOVAN ADDRESSES, can be updated by owner once contract created
         VRFConsumerBase(
@@ -378,9 +380,11 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             // payout if winner (initial bet plus winnings)
             if (g.pick == g.winner) {
                 g.player.transfer(totalPayout);
+            } else {
+                totalPayout = 0;
             }
 
-            // emit gamePlayed event
+            emit GamePlayed(g.player, g.bet, g.pick, g.winner, totalPayout);
         }
         gas1 = 1;
         gas2 = 1;

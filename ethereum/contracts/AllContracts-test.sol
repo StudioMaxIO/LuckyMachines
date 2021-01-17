@@ -214,6 +214,8 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     mapping(uint => Game) public games;
     mapping(bytes32 => uint) private _gameRequests;
 
+    event GamePlayed(address _player, uint256 _bet, uint256 _pick, uint256 _winner, uint256 _payout);
+
     constructor(address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout)
         //KOVAN ADDRESSES, can be updated by owner once contract created
         VRFConsumerBase(
@@ -378,9 +380,11 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             // payout if winner (initial bet plus winnings)
             if (g.pick == g.winner) {
                 g.player.transfer(totalPayout);
+            } else {
+                totalPayout = 0;
             }
 
-            // emit gamePlayed event
+            emit GamePlayed(g.player, g.bet, g.pick, g.winner, totalPayout);
         }
         gas1 = 1;
         gas2 = 1;
@@ -498,31 +502,27 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         if(g.id > 0){
             if(g.bet > maxBet) {
                 g.bet = maxBet;
-                // bet cannot be higher than max bet. If bet is placed for larger amount,
-                // excess value is lost to the contract.
             }
             uint totalPayout = g.bet.mul(payout) + g.bet;
             require(address(this).balance >= totalPayout, "Unable to pay. Please play again or request refund.");
 
-            // update game with chosen number
             g.winner = randomness;
 
-            // set game to played
             g.played = true;
 
-            // remove from unplayed bets
             if(_unplayedBets >= g.bet) {
                 _unplayedBets -= g.bet;
             } else {
                 _unplayedBets = 0;
             }
 
-            // payout if winner (initial bet plus winnings)
             if (g.pick == g.winner) {
                 g.player.transfer(totalPayout);
+            } else {
+                totalPayout = 0;
             }
 
-            // emit gamePlayed event
+            emit GamePlayed(g.player, g.bet, g.pick, g.winner, totalPayout);
         }
         gas1 = 1;
         gas2 = 1;
