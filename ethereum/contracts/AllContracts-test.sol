@@ -478,7 +478,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             player: _player,
             bet: _bet,
             pick: _pick,
-            winner: maxPick.add(10), //TODO: use 0, don't allow 0 as pickable value
+            winner: 0,
             played: _played
         });
         games[newGame.id] = newGame;
