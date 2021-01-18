@@ -28,7 +28,9 @@ class Operate extends Component {
     withdrawEthLoading: false,
     withdrawLinkAmount: "",
     withdrawLinkErrorMessage: "",
-    withdrawLinkLoading: false
+    withdrawLinkLoading: false,
+    closeMachineErrorMessage: "",
+    closeMachineLoading: ""
   };
 
   static async getInitialProps(props) {
@@ -121,6 +123,21 @@ class Operate extends Component {
     this.setState({
       withdrawLinkLoading: false
     });
+  };
+
+  closeMachine = async event => {
+    this.setState({ closeMachineLoading: true });
+    this.setState({ closeMachineErrorMessage: "" });
+    try {
+      const accounts = await web3.eth.getAccounts();
+      const luckyMachine = await LuckyMachine(this.props.address);
+      await luckyMachine.methods.closeMachine().send({
+        from: accounts[0]
+      });
+    } catch (err) {
+      this.setState({ closeMachineErrorMessage: err.message });
+    }
+    this.setState({ closeMachineLoading: false });
   };
 
   render() {
@@ -226,6 +243,15 @@ class Operate extends Component {
               </p>
             </Grid.Column>
           </Grid.Row>
+          <Grid.Row style={{ marginTop: "-20px" }}>
+            <Grid.Column width={"2"}>
+              <p>
+                <strong>Maximum Pick:</strong>
+                <br />
+                {this.props.maximumPick}
+              </p>
+            </Grid.Column>
+          </Grid.Row>
           <Grid.Row>
             <Grid.Column width={"6"}>
               <Header>Withdraw to address:</Header>
@@ -310,6 +336,39 @@ class Operate extends Component {
                   error
                   header="Oops!"
                   content={this.state.withdrawLinkErrorMessage}
+                />
+              </Form>
+            </Grid.Column>
+          </Grid.Row>
+          <Grid.Row>
+            <Grid.Column width={"6"}>
+              <Header>Close Machine (withdraw all funds)</Header>
+            </Grid.Column>
+          </Grid.Row>
+          <Grid.Row style={{ marginTop: "15px" }}>
+            <Grid.Column>
+              <Form
+                onSubmit={this.closeMachine}
+                error={!!this.state.closeMachineErrorMessage}
+              >
+                <Form.Group
+                  inline
+                  style={{ marginTop: "-30px", marginLeft: "-5px" }}
+                >
+                  <Button
+                    style={{ marginLeft: "5px" }}
+                    loading={this.state.closeMachineLoading}
+                    color="red"
+                    size="large"
+                  >
+                    Close Machine
+                  </Button>
+                  <br />
+                </Form.Group>
+                <Message
+                  error
+                  header="Oops!"
+                  content={this.state.closeMachineErrorMessage}
                 />
               </Form>
             </Grid.Column>

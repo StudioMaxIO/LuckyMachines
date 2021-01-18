@@ -18,6 +18,8 @@ import LuckyMachineFactory from "../ethereum/luckyMachineFactory";
 import LuckyMachine from "../ethereum/luckyMachine";
 import web3 from "../ethereum/web3";
 
+const factoryAddress = "0x88A8fc6314e988A209046B085020795fF80f3357";
+
 class Factory extends Component {
   state = {
     minBet: "0.01",
@@ -39,9 +41,7 @@ class Factory extends Component {
   }
 
   async getMachines() {
-    const factory = await LuckyMachineFactory(
-      "0xdaae661B89Fc78105357D5ef483d3bbb5D192ee0"
-    );
+    const factory = await LuckyMachineFactory(factoryAddress);
     const allMachines = await factory.methods.getMachines().call();
     const machines = [];
     for (var i = 0; i < allMachines.length; i++) {
@@ -67,9 +67,7 @@ class Factory extends Component {
 
     try {
       const accounts = await web3.eth.getAccounts();
-      const factory = await LuckyMachineFactory(
-        "0xEe708f7399331C6F506661FC6E43079b19817C45"
-      );
+      const factory = await LuckyMachineFactory(factoryAddress);
       const newMachine = await factory.methods
         .createMachine(
           web3.utils.toWei(this.state.maxBet, "ether"),
@@ -84,6 +82,7 @@ class Factory extends Component {
     } catch (err) {
       this.setState({ errorMessage: err.message });
     }
+    this.setState({ loading: false });
   };
 
   displayMachines() {

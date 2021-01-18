@@ -99,8 +99,6 @@ class Play extends Component {
           from: accounts[0],
           value: web3.utils.toWei(String(this.state.bet), "ether")
         });
-
-      //Router.pushRoute("/workshop");
     } catch (err) {
       this.setState({ errorMessage: err.message });
     }
