@@ -108,7 +108,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
      * @dev Returns whether a winning bet can by paid out by machine. Balance of
      * machine must be at least value of bet + (value of bet * payout).
      */
-    function betPayable(uint bet) internal view returns(bool){
+    function betPayable(uint bet) public view returns(bool){
         return (address(this).balance.sub(_unplayedBets) >= bet.mul(payout).add(bet));
     }
 
