@@ -19,8 +19,8 @@ import web3 from "../ethereum/web3";
 
 class Play extends Component {
   state = {
-    bet: 0.01,
-    pick: 0,
+    bet: "",
+    pick: 1,
     gameIDInput: "",
     checkGameLoading: false,
     checkGameErrorMessage: "",
@@ -53,6 +53,9 @@ class Play extends Component {
 
   async componentDidMount() {
     this._isMounted = true;
+    this.setState({
+      bet: web3.utils.fromWei(this.props.minimumBet, "ether")
+    });
     if (this.props.gameID != "") {
       //this.setState({ summaryGameID: this.props.gameID });
       this.loadGame();
@@ -90,27 +93,57 @@ class Play extends Component {
   placeBet = async event => {
     event.preventDefault();
     this.setState({ loading: true, errorMessage: "" });
+    const weiBet = web3.utils.toWei(this.state.bet, "ether");
+    const accounts = await web3.eth.getAccounts();
+    const luckyMachine = await LuckyMachine(this.props.address);
+    const payable = await luckyMachine.methods.betPayable(weiBet).call();
+    const betInRange =
+      weiBet >= this.props.minimumBet && weiBet <= this.props.maximumBet;
+    const linkBalance = await luckyMachine.methods.getLinkBalance().call();
+    const linkAvailable = linkBalance >= 0.1 * (10 ^ 18);
+    if (betInRange) {
+      if (payable) {
+        if (linkAvailable) {
+          try {
+            await luckyMachine.methods
+              .placeBetFor(accounts[0], this.state.pick)
+              .send({
+                from: accounts[0],
+                value: web3.utils.toWei(this.state.bet, "ether")
+              });
+            const gameID = await luckyMachine.methods
+              .lastGameCreated(accounts[0])
+              .call();
 
-    try {
-      const accounts = await web3.eth.getAccounts();
-      const luckyMachine = await LuckyMachine(String(this.props.address));
-      await luckyMachine.methods
-        .placeBetFor(accounts[0], this.state.pick)
-        .send({
-          from: accounts[0],
-          value: web3.utils.toWei(String(this.state.bet), "ether")
+            console.log("Game ID:", gameID);
+            const gameURL = "/play/" + this.props.address + "/g/" + gameID;
+            window.location.assign(gameURL);
+          } catch (err) {
+            this.setState({ errorMessage: err.message });
+          }
+        } else {
+          this.setState({
+            errorMessage:
+              "Machine does not have enough LINK to request random number."
+          });
+        }
+      } else {
+        this.setState({
+          errorMessage:
+            "Machine unable to pay out winnings. Try again later or try another machine."
         });
-      const gameID = await luckyMachine.methods
-        .lastGameCreated(accounts[0])
-        .call();
-
-      console.log("Game ID:", gameID);
-      const gameURL = "/play/" + this.props.address + "/g/" + gameID;
-      window.location.assign(gameURL);
-    } catch (err) {
-      this.setState({ errorMessage: err.message });
+      }
+    } else {
+      const rangeError =
+        "Bet outside of range of " +
+        web3.utils.fromWei(this.props.minimumBet, "ether") +
+        "ETH - " +
+        web3.utils.fromWei(this.props.maximumBet, "ether") +
+        "ETH";
+      this.setState({
+        errorMessage: rangeError
+      });
     }
-
     this.setState({ loading: false });
   };
 
@@ -306,10 +339,12 @@ class Play extends Component {
                 </p>
               </Grid.Column>
             </Grid.Row>
-            <Grid.Row></Grid.Row>
-            <Grid.Row></Grid.Row>
           </Grid>
         ) : null}
+        <Grid>
+          <Grid.Row></Grid.Row>
+          <Grid.Row></Grid.Row>
+        </Grid>
       </Layout>
     );
   }
