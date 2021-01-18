@@ -23,10 +23,10 @@ class Play extends Component {
     pick: 0,
     gameIDInput: "",
     checkGameLoading: false,
+    checkGameErrorMessage: "",
     loading: false,
     errorMessage: "",
     summaryGameID: "",
-    summaryMaxPick: "",
     summaryPlayer: "",
     summaryBet: "",
     summaryPick: "",
@@ -54,7 +54,8 @@ class Play extends Component {
   async componentDidMount() {
     this._isMounted = true;
     if (this.props.gameID != "") {
-      this.setState({ summaryGameID: this.props.gameID });
+      //this.setState({ summaryGameID: this.props.gameID });
+      this.loadGame();
     }
   }
 
@@ -64,7 +65,7 @@ class Play extends Component {
 
   displayPickerValues() {
     const final = [];
-    console.log("Max pick: ", this.props.maximumPick);
+    //console.log("Max pick: ", this.props.maximumPick);
     for (var i = 1; i < Number(this.props.maximumPick) + 1; i++) {
       final.push(
         <Button
@@ -99,6 +100,13 @@ class Play extends Component {
           from: accounts[0],
           value: web3.utils.toWei(String(this.state.bet), "ether")
         });
+      const gameID = await luckyMachine.methods
+        .lastGameCreated(accounts[0])
+        .call();
+
+      console.log("Game ID:", gameID);
+      const gameURL = "/play/" + this.props.address + "/g/" + gameID;
+      window.location.assign(gameURL);
     } catch (err) {
       this.setState({ errorMessage: err.message });
     }
@@ -106,10 +114,46 @@ class Play extends Component {
     this.setState({ loading: false });
   };
 
+  async loadGame() {
+    this.setState({ checkGameLoading: true, errorMessage: "" });
+    // load game summary from id
+    try {
+      //if data loaded, set state
+      const accounts = await web3.eth.getAccounts();
+      const luckyMachine = await LuckyMachine(this.props.address);
+      const gameSummary = await luckyMachine.methods
+        .games(this.props.gameID)
+        .call();
+      //console.log("Game Summary: ", gameSummary);
+      this.setState({
+        summaryGameID: gameSummary.id,
+        summaryPlayer: gameSummary.player,
+        summaryBet: gameSummary.bet,
+        summaryPick: gameSummary.pick,
+        summaryWinningNumber:
+          gameSummary.winner == "0" ? "pending..." : gameSummary.winner,
+        summaryStatus:
+          gameSummary.winner == "0"
+            ? "Awaiting Random Number"
+            : gameSummary.winner == gameSummary.pick
+            ? "Winner!"
+            : "Not a winner",
+        checkGameErrorMessage: ""
+      });
+    } catch (err) {
+      this.setState({ checkGameErrorMessage: err.message });
+    }
+    this.setState({ checkGameLoading: false, errorMessage: "" });
+  }
+
   checkGame = async event => {
     event.preventDefault();
-
     this.setState({ checkGameLoading: true, errorMessage: "" });
+    // load game summary from id
+    const gameURL =
+      "/play/" + this.props.address + "/g/" + this.state.gameIDInput;
+    this.setState({ checkGameLoading: false, errorMessage: "" });
+    window.location.assign(gameURL);
   };
 
   render() {
@@ -209,7 +253,7 @@ class Play extends Component {
                       placeholder="Game ID"
                       value={this.state.gameIDInput}
                       onChange={event =>
-                        this.setState({ tokenAddress: event.target.value })
+                        this.setState({ gameIDInput: event.target.value })
                       }
                     />
                   </Form.Field>
@@ -241,7 +285,7 @@ class Play extends Component {
                 </center>
               </Grid.Column>
             </Grid.Row>
-            <Grid.Row centered columns={2} hidden="true">
+            <Grid.Row centered columns={2}>
               <Grid.Column color="grey">
                 <p>
                   <strong>Player:</strong> {this.state.summaryPlayer}
@@ -258,10 +302,12 @@ class Play extends Component {
                   {this.state.summaryWinningNumber}
                 </p>
                 <p>
-                  <strong>{this.state.summaryStatus}</strong>
+                  <strong>Game Result:</strong> {this.state.summaryStatus}
                 </p>
               </Grid.Column>
             </Grid.Row>
+            <Grid.Row></Grid.Row>
+            <Grid.Row></Grid.Row>
           </Grid>
         ) : null}
       </Layout>

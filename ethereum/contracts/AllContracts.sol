@@ -214,6 +214,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     mapping(uint => Game) public games;
     mapping(bytes32 => uint) private _gameRequests;
+    mapping(address => uint) public lastGameCreated;
 
     event GamePlayed(address _player, uint256 _bet, uint256 _pick, uint256 _winner, uint256 _payout);
 
@@ -281,10 +282,11 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     /**
-     * @dev This will fail if machine conditions are not met.
+     * @dev Returns Game ID, which can be queried for status of game using games('gameID').
+     * This will fail if machine conditions are not met.
      * Use safeBetFor() if all conditions have not been pre-verified.
      */
-    function placeBetFor(address payable player, uint pick) public payable {
+    function placeBetFor(address payable player, uint pick) public payable{
         require(msg.value >= minBet, "minimum bet not met");
         if(gas1 == 1) {
             delete gas1;
@@ -303,13 +305,15 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         _unplayedBets = _unplayedBets.add(msg.value);
         createGame(player, msg.value, pick);
         playGame(_currentGame);
+        lastGameCreated[player] = _currentGame;
     }
 
-    /**
-     * @dev Places bet after ensuring all conditions are met (bet within minimum - maximum
+    /**s
+     * @dev Returns Game ID, which can be queried for status of game using games('gameID').
+     * Places bet after ensuring all conditions are met (bet within minimum - maximum
      * range, maximum pick not exceeded, winning bet is payable).
      */
-    function safeBetFor(address payable player, uint pick) public payable {
+    function safeBetFor(address payable player, uint pick) public payable{
         require(betPayable(msg.value), "Contract has insufficint funds to payout possible win.");
         require(pick <= maxPick && pick > 0, "Outside of pickable bounds");
         require(betInRange(msg.value),"Outisde of bet range.");
@@ -331,6 +335,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         _unplayedBets = _unplayedBets.add(msg.value);
         createGame(player, msg.value, pick);
         playGame(_currentGame);
+        lastGameCreated[player] = _currentGame;
     }
 
     /* Not ready or tested for production
