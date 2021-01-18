@@ -10,7 +10,8 @@ import {
   Input,
   Message,
   Label,
-  List
+  List,
+  Icon
 } from "semantic-ui-react";
 import Layout from "../components/Layout";
 import { Router, Link } from "../routes";
@@ -47,12 +48,18 @@ class Factory extends Component {
     for (var i = 0; i < allMachines.length; i++) {
       const m = await LuckyMachine(allMachines[i]);
       const summary = await m.methods.getSummary().call();
+      //active means max bet payable and enough link for bet
+      const maxBetPayable = await m.methods.betPayable(summary[1]).call();
+      const linkBalance = await m.methods.getLinkBalance().call();
+      const availableLink = linkBalance >= 0.1 * (10 ^ 18);
+      const active = maxBetPayable && availableLink;
       machines.push([
         summary[0],
         summary[1],
         summary[2],
         summary[3],
-        allMachines[i]
+        allMachines[i],
+        active
       ]);
     }
     this.setState({
@@ -90,12 +97,15 @@ class Factory extends Component {
     for (var i = 0; i < this.state.machines.length; i++) {
       if (i > 0) {
         final.push(
-          <List.Item style={{ marginTop: "-20px" }}>
-            <a href="#">
-              <Link route={"/play/" + this.state.machines[i][4]}>
-                {this.state.machines[i][4]}
-              </Link>
-            </a>
+          <List.Item style={{ marginTop: "-20px" }} key={i.toString()}>
+            <Link route={"/play/" + this.state.machines[i][4]}>
+              {this.state.machines[i][4]}
+            </Link>
+            &nbsp;
+            <Icon
+              color={this.state.machines[i][5] ? "green" : "red"}
+              name="circle"
+            />{" "}
             <br />
             <p>
               <strong>Payout:</strong>
@@ -112,12 +122,15 @@ class Factory extends Component {
         );
       } else {
         final.push(
-          <List.Item>
-            <a href="#">
-              <Link route={"/play/" + this.state.machines[i][4]}>
-                {this.state.machines[i][4]}
-              </Link>
-            </a>
+          <List.Item key={i.toString()}>
+            <Link route={"/play/" + this.state.machines[i][4]}>
+              {this.state.machines[i][4]}
+            </Link>
+            &nbsp;
+            <Icon
+              color={this.state.machines[i][5] ? "green" : "red"}
+              name="circle"
+            />{" "}
             <br />
             <p>
               <strong>Payout:</strong>
@@ -175,7 +188,6 @@ class Factory extends Component {
                       labelPosition="right"
                       value={this.state.minBet}
                       style={{ padding: "5px" }}
-                      textAlign="center"
                       onChange={event =>
                         this.setState({ minBet: event.target.value })
                       }
