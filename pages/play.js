@@ -72,6 +72,7 @@ class Play extends Component {
     for (var i = 1; i < Number(this.props.maximumPick) + 1; i++) {
       final.push(
         <Button
+          key={i.toString()}
           size="mini"
           style={{ margin: "5px" }}
           onClick={this.selectNumber}

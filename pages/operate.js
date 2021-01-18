@@ -30,7 +30,7 @@ class Operate extends Component {
     withdrawLinkErrorMessage: "",
     withdrawLinkLoading: false,
     closeMachineErrorMessage: "",
-    closeMachineLoading: ""
+    closeMachineLoading: false
   };
 
   static async getInitialProps(props) {
@@ -167,11 +167,9 @@ class Operate extends Component {
           <Grid.Row style={{ marginTop: "-28px" }}>
             <Grid.Column>
               <strong>
-                <a href="#">
-                  <Link route={"/play/" + this.props.address}>
-                    {this.props.address}
-                  </Link>
-                </a>
+                <Link route={"/play/" + this.props.address}>
+                  {this.props.address}
+                </Link>
               </strong>
             </Grid.Column>
           </Grid.Row>
@@ -179,7 +177,7 @@ class Operate extends Component {
             <Grid.Column width={"6"}>
               <Header>
                 Balances
-                <a href="javascript:void(0);">
+                <a href="#">
                   <Image
                     style={{ marginTop: "-2px" }}
                     spaced="left"
@@ -287,7 +285,7 @@ class Operate extends Component {
 
                   <Button
                     loading={this.state.withdrawEthLoading}
-                    primary="true"
+                    primary={true}
                     size="large"
                   >
                     Withdraw
@@ -326,7 +324,7 @@ class Operate extends Component {
                   </Form.Field>
                   <Button
                     loading={this.state.withdrawLinkLoading}
-                    primary="true"
+                    primary={true}
                     size="large"
                   >
                     Withdraw
