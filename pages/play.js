@@ -65,7 +65,7 @@ class Play extends Component {
 
   displayPickerValues() {
     const final = [];
-    console.log("Max pick: ", this.props.maximumPick);
+    //console.log("Max pick: ", this.props.maximumPick);
     for (var i = 1; i < Number(this.props.maximumPick) + 1; i++) {
       final.push(
         <Button
@@ -100,6 +100,13 @@ class Play extends Component {
           from: accounts[0],
           value: web3.utils.toWei(String(this.state.bet), "ether")
         });
+      const gameID = await luckyMachine.methods
+        .lastGameCreated(accounts[0])
+        .call();
+
+      console.log("Game ID:", gameID);
+      const gameURL = "/play/" + this.props.address + "/g/" + gameID;
+      window.location.assign(gameURL);
     } catch (err) {
       this.setState({ errorMessage: err.message });
     }
@@ -117,7 +124,7 @@ class Play extends Component {
       const gameSummary = await luckyMachine.methods
         .games(this.props.gameID)
         .call();
-      console.log("Game Summary: ", gameSummary);
+      //console.log("Game Summary: ", gameSummary);
       this.setState({
         summaryGameID: gameSummary.id,
         summaryPlayer: gameSummary.player,
