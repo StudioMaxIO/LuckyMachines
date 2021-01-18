@@ -18,7 +18,7 @@ import LuckyMachineFactory from "../ethereum/luckyMachineFactory";
 import LuckyMachine from "../ethereum/luckyMachine";
 import web3 from "../ethereum/web3";
 
-const factoryAddress = "0x48DE3CBa6013bc9f13C7BdAe0eF067B26976998F";
+const factoryAddress = "0x4c319820AaB84751B416678aB884ac1a86c8A443";
 
 class Factory extends Component {
   state = {
