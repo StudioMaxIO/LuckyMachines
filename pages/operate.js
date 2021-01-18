@@ -251,7 +251,7 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
-            <Grid.Column width={"6"}>
+            <Grid.Column width={"10"}>
               <Header>Withdraw to address:</Header>
             </Grid.Column>
           </Grid.Row>
@@ -339,7 +339,7 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
-            <Grid.Column width={"6"}>
+            <Grid.Column width={"10"}>
               <Header>Close Machine (withdraw all funds)</Header>
             </Grid.Column>
           </Grid.Row>
