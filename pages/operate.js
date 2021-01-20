@@ -10,7 +10,8 @@ import {
   Message,
   Label,
   Image,
-  Header
+  Header,
+  Icon
 } from "semantic-ui-react";
 import Layout from "../components/Layout";
 import { Link, Router } from "../routes";
@@ -176,17 +177,11 @@ class Operate extends Component {
           <Grid.Row style={{ marginTop: "-5px" }}>
             <Grid.Column width={"6"}>
               <Header>
-                Balances
+                Balances{" "}
                 <a href="#">
-                  <Image
-                    style={{ marginTop: "-2px" }}
-                    spaced="left"
-                    size="mini"
-                    src="https://i.postimg.cc/qMRWjVXx/smaller-reload.png"
-                    onClick={this.updateBalances}
-                  />
+                  <Icon name="redo" onClick={this.updateBalances} />
                 </a>
-              </Header>
+              </Header>{" "}
             </Grid.Column>
           </Grid.Row>
           <Grid.Row style={{ marginTop: "-30px" }}>
