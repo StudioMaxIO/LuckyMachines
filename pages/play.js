@@ -10,7 +10,8 @@ import {
   Input,
   Message,
   Label,
-  Menu
+  Menu,
+  Icon
 } from "semantic-ui-react";
 import Layout from "../components/Layout";
 import { Link, Router } from "../routes";
@@ -180,6 +181,34 @@ class Play extends Component {
     this.setState({ checkGameLoading: false, errorMessage: "" });
   }
 
+  reloadGame = async event => {
+    event.preventDefault();
+    try {
+      const accounts = await web3.eth.getAccounts();
+      const luckyMachine = await LuckyMachine(this.props.address);
+      const gameSummary = await luckyMachine.methods
+        .games(this.props.gameID)
+        .call();
+      this.setState({
+        summaryGameID: gameSummary.id,
+        summaryPlayer: gameSummary.player,
+        summaryBet: gameSummary.bet,
+        summaryPick: gameSummary.pick,
+        summaryWinningNumber:
+          gameSummary.winner == "0" ? "pending..." : gameSummary.winner,
+        summaryStatus:
+          gameSummary.winner == "0"
+            ? "Awaiting Random Number"
+            : gameSummary.winner == gameSummary.pick
+            ? "Winner!"
+            : "Not a winner",
+        checkGameErrorMessage: ""
+      });
+    } catch (err) {
+      this.setState({ checkGameErrorMessage: err.message });
+    }
+  };
+
   checkGame = async event => {
     event.preventDefault();
     this.setState({ checkGameLoading: true, errorMessage: "" });
@@ -316,6 +345,9 @@ class Play extends Component {
                   >
                     Game #{this.state.summaryGameID}
                   </h2>
+                  <a href="#">
+                    <Icon name="redo" onClick={this.reloadGame} />
+                  </a>
                 </center>
               </Grid.Column>
             </Grid.Row>
