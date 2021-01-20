@@ -59,15 +59,22 @@ class Operate extends Component {
   }
 
   async getBalances() {
-    const luckyMachine = LuckyMachine(this.props.address);
-    const ethBalance = await web3.eth.getBalance(this.props.address);
-    const linkBalance = await luckyMachine.methods.getLinkBalance().call();
-    const payoutAddress = await luckyMachine.methods.payoutAddress().call();
-    this.setState({
-      ethBalance: ethBalance,
-      linkBalance: linkBalance,
-      payoutAddress: payoutAddress
-    });
+    const accounts = await web3.eth.getAccounts();
+    const luckyMachine = await LuckyMachine(this.props.address);
+    const owner = await luckyMachine.methods.owner().call();
+    if (owner == accounts[0]) {
+      const ethBalance = await web3.eth.getBalance(this.props.address);
+      const linkBalance = await luckyMachine.methods.getLinkBalance().call();
+      const payoutAddress = await luckyMachine.methods.payoutAddress().call();
+      this.setState({
+        ethBalance: ethBalance,
+        linkBalance: linkBalance,
+        payoutAddress: payoutAddress
+      });
+    } else {
+      const invalidURL = "/operate/" + this.props.address + "/invalid";
+      window.location.assign(invalidURL);
+    }
   }
 
   updateBalances = async event => {
@@ -184,7 +191,7 @@ class Operate extends Component {
               </Header>{" "}
             </Grid.Column>
           </Grid.Row>
-          <Grid.Row style={{ marginTop: "-30px" }}>
+          <Grid.Row style={{ marginTop: "-20px" }}>
             <Grid.Column width={"2"}>
               <p>
                 <strong>ETH:</strong>

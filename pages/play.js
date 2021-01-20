@@ -31,7 +31,7 @@ class Play extends Component {
     summaryPlayer: "",
     summaryBet: "",
     summaryPick: "",
-    summaryWinningNumber: "pending...",
+    summaryWinningNumber: "Pending...",
     summaryStatus: "Awaiting Random Number"
   };
 
@@ -166,7 +166,7 @@ class Play extends Component {
         summaryBet: gameSummary.bet,
         summaryPick: gameSummary.pick,
         summaryWinningNumber:
-          gameSummary.winner == "0" ? "pending..." : gameSummary.winner,
+          gameSummary.winner == "0" ? "Pending..." : gameSummary.winner,
         summaryStatus:
           gameSummary.winner == "0"
             ? "Awaiting Random Number"
@@ -195,7 +195,7 @@ class Play extends Component {
         summaryBet: gameSummary.bet,
         summaryPick: gameSummary.pick,
         summaryWinningNumber:
-          gameSummary.winner == "0" ? "pending..." : gameSummary.winner,
+          gameSummary.winner == "0" ? "Pending..." : gameSummary.winner,
         summaryStatus:
           gameSummary.winner == "0"
             ? "Awaiting Random Number"
@@ -343,7 +343,9 @@ class Play extends Component {
                       fontWeight: "normal"
                     }}
                   >
-                    Game #{this.state.summaryGameID}
+                    {this.state.summaryGameID != "0"
+                      ? "Game #" + this.state.summaryGameID
+                      : "No Game Found"}
                   </h2>
                   <a href="#">
                     <Icon name="redo" onClick={this.reloadGame} />
@@ -354,21 +356,33 @@ class Play extends Component {
             <Grid.Row centered columns={2}>
               <Grid.Column color="grey">
                 <p>
-                  <strong>Player:</strong> {this.state.summaryPlayer}
+                  <strong>Player:</strong>{" "}
+                  {this.state.summaryPlayer !=
+                  "0x0000000000000000000000000000000000000000"
+                    ? this.state.summaryPlayer
+                    : ""}
                 </p>
                 <p>
                   <strong>Bet:</strong>{" "}
-                  {web3.utils.fromWei(this.state.summaryBet, "ether")} ETH
+                  {this.state.summaryBet != "0"
+                    ? web3.utils.fromWei(this.state.summaryBet, "ether") + "ETH"
+                    : ""}
                 </p>
                 <p>
-                  <strong>Pick:</strong> {this.state.summaryPick}
+                  <strong>Pick:</strong>{" "}
+                  {this.state.summaryPick != "0" ? this.state.summaryPick : ""}
                 </p>
                 <p>
                   <strong>Winning Number:</strong>{" "}
-                  {this.state.summaryWinningNumber}
+                  {this.state.summaryWinningNumber != "Pending..."
+                    ? this.state.summaryWinningNumber
+                    : ""}
                 </p>
                 <p>
-                  <strong>Game Result:</strong> {this.state.summaryStatus}
+                  <strong>Game Result:</strong>{" "}
+                  {this.state.summaryStatus != "Awaiting Random Number"
+                    ? this.state.summaryStatus
+                    : ""}
                 </p>
               </Grid.Column>
             </Grid.Row>
