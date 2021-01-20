@@ -1,6 +1,6 @@
 ## Lucky Machines
 
-Create and run provably fair betting machines using Chainlink VRM for on-chain random numbers. This project includes a factory for quickly creating a lucky machine, of which any profits can be claimed by the owner. 
+Create and run provably fair betting machines using Chainlink VRM for random numbers. This project includes a factory for quickly creating a lucky machine, of which any profits can be claimed by the owner.
 
 Each machine must be funded with enough ETH to pay out any potential winnings plus enough LINK to request random numbers before play is available. Once play is enabled, any player with an Ethereum address can place a bet through the provided UI or through direct contract interaction. 
 
