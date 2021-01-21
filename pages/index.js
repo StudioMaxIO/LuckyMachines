@@ -33,9 +33,15 @@ class Dashboard extends Component {
               Lucky Machines
             </h1>
           </Grid.Row>
-          <Grid.Row color={"blue"}>
+          <Grid.Row style={{ backgroundColor: "#99ccff", color: "#001433" }}>
             <Grid.Column width={12}>
-              <Container fluid style={{ fontSize: "2em", marginTop: "1.5em" }}>
+              <Container
+                fluid
+                style={{
+                  fontSize: "1.7em",
+                  marginTop: "1.5em"
+                }}
+              >
                 <p>
                   Provably fair betting machines using Chainlink VRM for
                   generating random numbers.{" "}
