@@ -18,8 +18,9 @@ import { Router, Link } from "../routes";
 import LuckyMachineFactory from "../ethereum/luckyMachineFactory";
 import LuckyMachine from "../ethereum/luckyMachine";
 import web3 from "../ethereum/web3";
+const s = require("../settings");
 
-const factoryAddress = "0x0c799AE48E00637Dd1782F8865091443Bc5a8363";
+const factoryAddress = s.FACTORY_ADDRESS;
 
 class Factory extends Component {
   state = {
@@ -250,7 +251,7 @@ class Factory extends Component {
               </Form>
             </Grid.Column>
           </Grid.Row>
-          <Grid.Row>
+          <Grid.Row style={{ backgroundColor: "#99ccff" }}>
             <Grid.Column>
               <Header>Machines:</Header>
               <List>{this.displayMachines()}</List>

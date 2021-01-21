@@ -151,7 +151,13 @@ class Operate extends Component {
   render() {
     return (
       <Layout page="operate">
-        <Grid style={{ marginTop: "10px" }}>
+        <Grid
+          style={{
+            marginTop: "10px",
+            backgroundColor: "#99ccff",
+            color: "#001433"
+          }}
+        >
           <Grid.Row color="black">
             <Grid.Column>
               <center>
@@ -168,11 +174,13 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
+            <Grid.Column></Grid.Column>
             <Grid.Column>
               <Header>Machine:</Header>
             </Grid.Column>
           </Grid.Row>
           <Grid.Row style={{ marginTop: "-28px" }}>
+            <Grid.Column></Grid.Column>
             <Grid.Column>
               <strong>
                 <Link route={"/play/" + this.props.address}>
@@ -182,6 +190,7 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row style={{ marginTop: "-5px" }}>
+            <Grid.Column></Grid.Column>
             <Grid.Column width={"6"}>
               <Header>
                 Balances{" "}
@@ -192,6 +201,7 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row style={{ marginTop: "-20px" }}>
+            <Grid.Column></Grid.Column>
             <Grid.Column width={"2"}>
               <p>
                 <strong>ETH:</strong>
@@ -205,8 +215,10 @@ class Operate extends Component {
               </p>
             </Grid.Column>
           </Grid.Row>
-          <Grid.Row style={{ marginTop: "-20px" }}>
-            <Grid.Column>
+          <Grid.Column></Grid.Column>
+          <Grid.Row style={{ marginTop: "-50px" }}>
+            <Grid.Column></Grid.Column>
+            <Grid.Column width={"10"}>
               <p>
                 {" "}
                 To fund machine, send ETH & LINK to:
@@ -216,11 +228,13 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
-            <Grid.Column>
+            <Grid.Column></Grid.Column>
+            <Grid.Column width={"10"}>
               <Header>Machine Settings</Header>
             </Grid.Column>
           </Grid.Row>
           <Grid.Row style={{ marginTop: "-23px" }}>
+            <Grid.Column></Grid.Column>
             <Grid.Column width={"3"}>
               <p>
                 <strong>Minimum Bet:</strong>
@@ -235,6 +249,7 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row style={{ marginTop: "-20px" }}>
+            <Grid.Column></Grid.Column>
             <Grid.Column width={"2"}>
               <p>
                 <strong>Payout:</strong>
@@ -244,6 +259,7 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row style={{ marginTop: "-20px" }}>
+            <Grid.Column></Grid.Column>
             <Grid.Column width={"2"}>
               <p>
                 <strong>Maximum Pick:</strong>
@@ -253,11 +269,13 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
+            <Grid.Column></Grid.Column>
             <Grid.Column width={"10"}>
               <Header>Withdraw to address:</Header>
             </Grid.Column>
           </Grid.Row>
           <Grid.Row style={{ marginTop: "-28px" }}>
+            <Grid.Column></Grid.Column>
             <Grid.Column>
               <strong>
                 <p>{this.state.payoutAddress}</p>
@@ -265,6 +283,7 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row style={{ marginTop: "-15px" }}>
+            <Grid.Column></Grid.Column>
             <Grid.Column>
               <Form
                 onSubmit={this.withdrawEth}
@@ -302,6 +321,7 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
+            <Grid.Column></Grid.Column>
             <Grid.Column>
               <Form
                 onSubmit={this.withdrawLink}
@@ -341,12 +361,14 @@ class Operate extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
+            <Grid.Column></Grid.Column>
             <Grid.Column width={"10"}>
               <Header>Close Machine (withdraw all funds)</Header>
             </Grid.Column>
           </Grid.Row>
           <Grid.Row style={{ marginTop: "15px" }}>
-            <Grid.Column>
+            <Grid.Column></Grid.Column>
+            <Grid.Column width={"10"}>
               <Form
                 onSubmit={this.closeMachine}
                 error={!!this.state.closeMachineErrorMessage}
