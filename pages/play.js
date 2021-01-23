@@ -276,28 +276,26 @@ class Play extends Component {
           <Grid.Row color="blue" centered>
             <Form onSubmit={this.placeBet} error={!!this.state.errorMessage}>
               <Form.Group style={{ paddingTop: "10px" }}>
-                <center>
-                  <Form.Field>
-                    <Label
-                      color="black"
-                      style={{
-                        marginBottom: "5px",
-                        padding: "10px"
-                      }}
-                    >
-                      Bet
-                    </Label>
-                    <Input
-                      label="ETH"
-                      labelPosition="right"
-                      value={this.state.bet}
-                      style={{ padding: "5px" }}
-                      onChange={event =>
-                        this.setState({ bet: event.target.value })
-                      }
-                    />
-                  </Form.Field>
-                </center>
+                <Form.Field>
+                  <Label
+                    color="black"
+                    style={{
+                      marginBottom: "5px",
+                      padding: "10px"
+                    }}
+                  >
+                    Bet
+                  </Label>
+                  <Input
+                    label="ETH"
+                    labelPosition="right"
+                    value={this.state.bet}
+                    style={{ padding: "5px" }}
+                    onChange={event =>
+                      this.setState({ bet: event.target.value })
+                    }
+                  />
+                </Form.Field>
               </Form.Group>
               <Message error header="Oops!" content={this.state.errorMessage} />
               <Button loading={this.state.loading} color="orange" size="huge">
