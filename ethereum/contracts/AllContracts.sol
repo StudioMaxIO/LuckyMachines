@@ -569,6 +569,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
 contract LuckyMachineFactory{
     address[] public machines;
+    mapping(address => address[]) private ownedMachines;
 
     /**
      * @dev Used to create a LuckyMachine that can be verified and included in the
@@ -579,14 +580,22 @@ contract LuckyMachineFactory{
         newMachine.transferOwnership(msg.sender);
         address newMachineAddress = address(newMachine);
         machines.push(newMachineAddress);
+        ownedMachines[msg.sender].push(newMachineAddress);
         return newMachineAddress;
     }
 
     /**
      * @dev Returns a list of all machines created from this factory. Useful to verify
-     * a machine was setup appropriately and is a "legitimate" LuckyMachine.
+     * a machine was setup appropriately and is a legitimate LuckyMachine.
      */
     function getMachines() public view returns (address[] memory) {
         return machines;
+    }
+
+    /**
+     * @dev Returns a list of all machines created by the sender.
+     */
+    function getOwnedMachines() public view returns (address[] memory) {
+        return ownedMachines[msg.sender];
     }
 }
