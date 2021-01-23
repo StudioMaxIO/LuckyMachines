@@ -223,7 +223,23 @@ class Operate extends Component {
                 {" "}
                 To fund machine, send ETH & LINK to:
                 <br />
-                <strong>{this.props.address}</strong>
+                <span>
+                  <strong
+                    ref={span => (this.span = span)}
+                    value={this.props.address}
+                  >
+                    {this.props.address}
+                  </strong>
+                </span>
+                &nbsp;
+                <a href="#">
+                  <Icon
+                    name="copy outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(this.props.address);
+                    }}
+                  />
+                </a>
               </p>
             </Grid.Column>
           </Grid.Row>
