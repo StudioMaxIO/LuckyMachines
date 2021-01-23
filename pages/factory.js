@@ -43,8 +43,11 @@ class Factory extends Component {
   }
 
   async getMachines() {
+    const accounts = await web3.eth.getAccounts();
     const factory = await LuckyMachineFactory(factoryAddress);
-    const allMachines = await factory.methods.getMachines().call();
+    const allMachines = await factory.methods
+      .getOwnedMachines()
+      .call({ from: accounts[0] });
     const machines = [];
     for (var i = 0; i < allMachines.length; i++) {
       const m = await LuckyMachine(allMachines[i]);
@@ -99,7 +102,7 @@ class Factory extends Component {
       if (i > 0) {
         final.push(
           <List.Item style={{ marginTop: "-20px" }} key={i.toString()}>
-            <Link route={"/play/" + this.state.machines[i][4]}>
+            <Link route={"/operate/" + this.state.machines[i][4]}>
               {this.state.machines[i][4]}
             </Link>
             &nbsp;
@@ -124,7 +127,7 @@ class Factory extends Component {
       } else {
         final.push(
           <List.Item key={i.toString()}>
-            <Link route={"/play/" + this.state.machines[i][4]}>
+            <Link route={"/operate/" + this.state.machines[i][4]}>
               {this.state.machines[i][4]}
             </Link>
             &nbsp;
@@ -253,7 +256,7 @@ class Factory extends Component {
           </Grid.Row>
           <Grid.Row style={{ backgroundColor: "#99ccff" }}>
             <Grid.Column>
-              <Header>Machines:</Header>
+              <Header>My Machines:</Header>
               <List>{this.displayMachines()}</List>
             </Grid.Column>
           </Grid.Row>
