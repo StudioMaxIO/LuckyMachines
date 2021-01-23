@@ -189,7 +189,7 @@ class Operate extends Component {
               </strong>
             </Grid.Column>
           </Grid.Row>
-          <Grid.Row style={{ marginTop: "-5px" }}>
+          <Grid.Row style={{ marginTop: "-5px", zIndex: "10000" }}>
             <Grid.Column></Grid.Column>
             <Grid.Column width={"6"}>
               <Header>
@@ -200,7 +200,7 @@ class Operate extends Component {
               </Header>{" "}
             </Grid.Column>
           </Grid.Row>
-          <Grid.Row style={{ marginTop: "-20px" }}>
+          <Grid.Row style={{ marginTop: "-20px", zIndex: "1000" }}>
             <Grid.Column></Grid.Column>
             <Grid.Column width={"2"}>
               <p>
@@ -223,7 +223,23 @@ class Operate extends Component {
                 {" "}
                 To fund machine, send ETH & LINK to:
                 <br />
-                <strong>{this.props.address}</strong>
+                <span>
+                  <strong
+                    ref={span => (this.span = span)}
+                    value={this.props.address}
+                  >
+                    {this.props.address}
+                  </strong>
+                </span>
+                &nbsp;
+                <a href="#">
+                  <Icon
+                    name="copy outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(this.props.address);
+                    }}
+                  />
+                </a>
               </p>
             </Grid.Column>
           </Grid.Row>
