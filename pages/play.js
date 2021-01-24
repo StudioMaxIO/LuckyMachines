@@ -117,9 +117,16 @@ class Play extends Component {
               .lastGameCreated(accounts[0])
               .call();
 
-            console.log("Game ID:", gameID);
-            const gameURL = "/play/" + this.props.address + "/g/" + gameID;
-            window.location.assign(gameURL);
+            //console.log("Game ID:", gameID);
+            //const gameURL = "/play/" + this.props.address + "/g/" + gameID;
+            //window.location.assign(gameURL);
+            if (this.props.gameID == "") {
+              const gameURL = "/play/" + this.props.address + "/g/" + gameID;
+              window.location.assign(gameURL);
+            } else {
+              this.setState({ gameIDInput: gameID });
+              this.reloadGame();
+            }
           } catch (err) {
             this.setState({ errorMessage: err.message });
           }
@@ -182,12 +189,14 @@ class Play extends Component {
   }
 
   reloadGame = async event => {
-    event.preventDefault();
+    if (event) {
+      event.preventDefault();
+    }
     try {
       const accounts = await web3.eth.getAccounts();
       const luckyMachine = await LuckyMachine(this.props.address);
       const gameSummary = await luckyMachine.methods
-        .games(this.props.gameID)
+        .games(this.state.gameIDInput)
         .call();
       this.setState({
         summaryGameID: gameSummary.id,
@@ -212,11 +221,14 @@ class Play extends Component {
   checkGame = async event => {
     event.preventDefault();
     this.setState({ checkGameLoading: true, errorMessage: "" });
-    // load game summary from id
-    const gameURL =
-      "/play/" + this.props.address + "/g/" + this.state.gameIDInput;
+    if (this.props.gameID == "") {
+      const gameURL =
+        "/play/" + this.props.address + "/g/" + this.state.gameIDInput;
+      window.location.assign(gameURL);
+    } else {
+      this.reloadGame();
+    }
     this.setState({ checkGameLoading: false, errorMessage: "" });
-    window.location.assign(gameURL);
   };
 
   render() {
