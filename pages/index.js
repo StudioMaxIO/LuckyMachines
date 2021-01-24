@@ -43,8 +43,11 @@ class Dashboard extends Component {
                 }}
               >
                 <p>
-                  Provably fair betting machines using Chainlink VRM for
-                  generating random numbers.{" "}
+                  Provably fair betting machines using{" "}
+                  <a href="https://docs.chain.link/docs/chainlink-vrf">
+                    Chainlink VRF
+                  </a>{" "}
+                  for generating random numbers.{" "}
                   <Link route="/play">
                     <strong>
                       <a href="#">Play machines</a>
