@@ -32,6 +32,7 @@ class Play extends Component {
     summaryBet: "",
     summaryPick: "",
     summaryWinningNumber: "",
+    summaryPlayed: false,
     requestRefundErrorMessage: "",
     requestRefundLoading: false,
     summaryGameRefunded: false
@@ -172,6 +173,7 @@ class Play extends Component {
         summaryBet: gameSummary.bet,
         summaryPick: gameSummary.pick,
         summaryWinningNumber: gameSummary.winner,
+        summaryPlayed: gameSummary.played,
         checkGameErrorMessage: ""
       });
     } catch (err) {
@@ -197,6 +199,7 @@ class Play extends Component {
         summaryBet: gameSummary.bet,
         summaryPick: gameSummary.pick,
         summaryWinningNumber: gameSummary.winner,
+        summaryPlayed: gameSummary.played,
         checkGameErrorMessage: ""
       });
     } catch (err) {
@@ -398,7 +401,9 @@ class Play extends Component {
                   {this.state.summaryGameID == "0"
                     ? ""
                     : this.state.summaryWinningNumber == "0"
-                    ? "Pending..."
+                    ? this.state.summaryPlayed
+                      ? "None selected"
+                      : "Pending..."
                     : this.state.summaryWinningNumber}
                 </p>
                 <p>
@@ -406,7 +411,9 @@ class Play extends Component {
                   {this.state.summaryGameID == "0"
                     ? ""
                     : this.state.summaryWinningNumber == "0"
-                    ? "Awaiting Random Number"
+                    ? this.state.summaryPlayed
+                      ? "Refunded / Canceled"
+                      : "Awaiting Random Number"
                     : this.state.summaryWinningNumber == this.state.summaryPick
                     ? "Winner!"
                     : "Not a winner"}
@@ -420,7 +427,8 @@ class Play extends Component {
                     {this.state.summaryGameRefunded
                       ? ""
                       : this.state.summaryGameID != "0" &&
-                        this.state.summaryWinningNumber == "0"
+                        this.state.summaryWinningNumber == "0" &&
+                        this.state.summaryPlayed == false
                       ? "Request Refund"
                       : ""}
                   </a>
