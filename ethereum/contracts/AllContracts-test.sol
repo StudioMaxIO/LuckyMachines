@@ -405,7 +405,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         //randomResult = randomness;
         Game storage g = games[_gameRequests[requestId]];
-        if(g.id > 0){
+        if(g.id > 0 && g.played == false){
             if(g.bet > maxBet) {
                 g.bet = maxBet;
             }
@@ -597,7 +597,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     function testFulfillRandomness(bytes32 requestId, uint256 randomness) internal {
         Game storage g = games[_gameRequests[requestId]];
-        if(g.id > 0){
+        if(g.id > 0 && g.played == false){
             if(g.bet > maxBet) {
                 g.bet = maxBet;
             }
@@ -661,12 +661,12 @@ contract LuckyMachineFactory{
 
     /**
      * @dev Returns a list of all machines created from this factory. Useful to verify
-     * a machine was setup appropriately and is a legitimate LuckyMachine.
+     * a machine was setup appropriately and is a "legitimate" LuckyMachine.
      */
     function getMachines() public view returns (address[] memory) {
         return machines;
     }
-    
+
     /**
      * @dev Returns a list of all machines created by the sender.
      */

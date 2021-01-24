@@ -31,8 +31,11 @@ class Play extends Component {
     summaryPlayer: "",
     summaryBet: "",
     summaryPick: "",
-    summaryWinningNumber: "Pending...",
-    summaryStatus: "Awaiting Random Number"
+    summaryWinningNumber: "",
+    summaryPlayed: false,
+    requestRefundErrorMessage: "",
+    requestRefundLoading: false,
+    summaryGameRefunded: false
   };
 
   static async getInitialProps(props) {
@@ -117,9 +120,13 @@ class Play extends Component {
               .lastGameCreated(accounts[0])
               .call();
 
-            console.log("Game ID:", gameID);
-            const gameURL = "/play/" + this.props.address + "/g/" + gameID;
-            window.location.assign(gameURL);
+            if (this.props.gameID == "") {
+              const gameURL = "/play/" + this.props.address + "/g/" + gameID;
+              window.location.assign(gameURL);
+            } else {
+              this.setState({ gameIDInput: gameID });
+              this.reloadGame();
+            }
           } catch (err) {
             this.setState({ errorMessage: err.message });
           }
@@ -165,14 +172,8 @@ class Play extends Component {
         summaryPlayer: gameSummary.player,
         summaryBet: gameSummary.bet,
         summaryPick: gameSummary.pick,
-        summaryWinningNumber:
-          gameSummary.winner == "0" ? "Pending..." : gameSummary.winner,
-        summaryStatus:
-          gameSummary.winner == "0"
-            ? "Awaiting Random Number"
-            : gameSummary.winner == gameSummary.pick
-            ? "Winner!"
-            : "Not a winner",
+        summaryWinningNumber: gameSummary.winner,
+        summaryPlayed: gameSummary.played,
         checkGameErrorMessage: ""
       });
     } catch (err) {
@@ -182,26 +183,23 @@ class Play extends Component {
   }
 
   reloadGame = async event => {
-    event.preventDefault();
+    if (event) {
+      event.preventDefault();
+    }
+    this.setState({ requestRefundErrorMessage: false });
     try {
       const accounts = await web3.eth.getAccounts();
       const luckyMachine = await LuckyMachine(this.props.address);
       const gameSummary = await luckyMachine.methods
-        .games(this.props.gameID)
+        .games(this.state.gameIDInput)
         .call();
       this.setState({
         summaryGameID: gameSummary.id,
         summaryPlayer: gameSummary.player,
         summaryBet: gameSummary.bet,
         summaryPick: gameSummary.pick,
-        summaryWinningNumber:
-          gameSummary.winner == "0" ? "Pending..." : gameSummary.winner,
-        summaryStatus:
-          gameSummary.winner == "0"
-            ? "Awaiting Random Number"
-            : gameSummary.winner == gameSummary.pick
-            ? "Winner!"
-            : "Not a winner",
+        summaryWinningNumber: gameSummary.winner,
+        summaryPlayed: gameSummary.played,
         checkGameErrorMessage: ""
       });
     } catch (err) {
@@ -212,11 +210,39 @@ class Play extends Component {
   checkGame = async event => {
     event.preventDefault();
     this.setState({ checkGameLoading: true, errorMessage: "" });
-    // load game summary from id
-    const gameURL =
-      "/play/" + this.props.address + "/g/" + this.state.gameIDInput;
+    if (this.props.gameID == "") {
+      const gameURL =
+        "/play/" + this.props.address + "/g/" + this.state.gameIDInput;
+      window.location.assign(gameURL);
+    } else {
+      this.reloadGame();
+    }
     this.setState({ checkGameLoading: false, errorMessage: "" });
-    window.location.assign(gameURL);
+  };
+
+  requestRefund = async event => {
+    if (event) {
+      event.preventDefault();
+    }
+    try {
+      const accounts = await web3.eth.getAccounts();
+      const luckyMachine = await LuckyMachine(this.props.address);
+      const gameInfo = await luckyMachine.methods
+        .games(this.state.summaryGameID)
+        .call();
+      if (!gameInfo.played) {
+        await luckyMachine.methods
+          .requestRefund(this.state.summaryGameID)
+          .send({ from: accounts[0] });
+      } else {
+        this.setState({ summaryGameRefunded: true });
+        this.setState({
+          requestRefundErrorMessage: "Game already played. Cannot refund."
+        });
+      }
+    } catch (err) {
+      this.setState({ requestRefundErrorMessage: err.message });
+    }
   };
 
   render() {
@@ -372,15 +398,43 @@ class Play extends Component {
                 </p>
                 <p>
                   <strong>Winning Number:</strong>{" "}
-                  {this.state.summaryWinningNumber != "Pending..."
-                    ? this.state.summaryWinningNumber
-                    : ""}
+                  {this.state.summaryGameID == "0"
+                    ? ""
+                    : this.state.summaryWinningNumber == "0"
+                    ? this.state.summaryPlayed
+                      ? "None selected"
+                      : "Pending..."
+                    : this.state.summaryWinningNumber}
                 </p>
                 <p>
                   <strong>Game Result:</strong>{" "}
-                  {this.state.summaryStatus != "Awaiting Random Number"
-                    ? this.state.summaryStatus
-                    : ""}
+                  {this.state.summaryGameID == "0"
+                    ? ""
+                    : this.state.summaryWinningNumber == "0"
+                    ? this.state.summaryPlayed
+                      ? "Refunded / Canceled"
+                      : "Awaiting Random Number"
+                    : this.state.summaryWinningNumber == this.state.summaryPick
+                    ? "Winner!"
+                    : "Not a winner"}
+                </p>
+                <p>
+                  <a
+                    href="#"
+                    style={{ color: "#fe7e7e" }}
+                    onClick={this.requestRefund}
+                  >
+                    {this.state.summaryGameRefunded
+                      ? ""
+                      : this.state.summaryGameID != "0" &&
+                        this.state.summaryWinningNumber == "0" &&
+                        this.state.summaryPlayed == false
+                      ? "Request Refund"
+                      : ""}
+                  </a>
+                  <span style={{ color: "#fe7e7e" }}>
+                    &nbsp;{this.state.requestRefundErrorMessage}
+                  </span>
                 </p>
               </Grid.Column>
             </Grid.Row>

@@ -236,7 +236,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         //randomResult = randomness;
         Game storage g = games[_gameRequests[requestId]];
-        if(g.id > 0){
+        if(g.id > 0 && g.played == false){
             if(g.bet > maxBet) {
                 g.bet = maxBet;
             }
