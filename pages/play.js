@@ -31,8 +31,7 @@ class Play extends Component {
     summaryPlayer: "",
     summaryBet: "",
     summaryPick: "",
-    summaryWinningNumber: "Pending...",
-    summaryStatus: "Awaiting Random Number"
+    summaryWinningNumber: ""
   };
 
   static async getInitialProps(props) {
@@ -117,9 +116,6 @@ class Play extends Component {
               .lastGameCreated(accounts[0])
               .call();
 
-            //console.log("Game ID:", gameID);
-            //const gameURL = "/play/" + this.props.address + "/g/" + gameID;
-            //window.location.assign(gameURL);
             if (this.props.gameID == "") {
               const gameURL = "/play/" + this.props.address + "/g/" + gameID;
               window.location.assign(gameURL);
@@ -172,14 +168,7 @@ class Play extends Component {
         summaryPlayer: gameSummary.player,
         summaryBet: gameSummary.bet,
         summaryPick: gameSummary.pick,
-        summaryWinningNumber:
-          gameSummary.winner == "0" ? "Pending..." : gameSummary.winner,
-        summaryStatus:
-          gameSummary.winner == "0"
-            ? "Awaiting Random Number"
-            : gameSummary.winner == gameSummary.pick
-            ? "Winner!"
-            : "Not a winner",
+        summaryWinningNumber: gameSummary.winner,
         checkGameErrorMessage: ""
       });
     } catch (err) {
@@ -203,14 +192,7 @@ class Play extends Component {
         summaryPlayer: gameSummary.player,
         summaryBet: gameSummary.bet,
         summaryPick: gameSummary.pick,
-        summaryWinningNumber:
-          gameSummary.winner == "0" ? "Pending..." : gameSummary.winner,
-        summaryStatus:
-          gameSummary.winner == "0"
-            ? "Awaiting Random Number"
-            : gameSummary.winner == gameSummary.pick
-            ? "Winner!"
-            : "Not a winner",
+        summaryWinningNumber: gameSummary.winner,
         checkGameErrorMessage: ""
       });
     } catch (err) {
@@ -384,15 +366,21 @@ class Play extends Component {
                 </p>
                 <p>
                   <strong>Winning Number:</strong>{" "}
-                  {this.state.summaryWinningNumber != "Pending..."
-                    ? this.state.summaryWinningNumber
-                    : ""}
+                  {this.state.summaryGameID == "0"
+                    ? ""
+                    : this.state.summaryWinningNumber == "0"
+                    ? "Pending..."
+                    : this.state.summaryWinningNumber}
                 </p>
                 <p>
                   <strong>Game Result:</strong>{" "}
-                  {this.state.summaryStatus != "Awaiting Random Number"
-                    ? this.state.summaryStatus
-                    : ""}
+                  {this.state.summaryGameID == "0"
+                    ? ""
+                    : this.state.summaryWinningNumber == "0"
+                    ? "Awaiting Random Number"
+                    : this.state.summaryWinningNumber == this.state.summaryPick
+                    ? "Winner!"
+                    : "Not a winner"}
                 </p>
               </Grid.Column>
             </Grid.Row>
