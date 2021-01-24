@@ -43,32 +43,43 @@ class Dashboard extends Component {
                 }}
               >
                 <p>
-                  Provably fair betting machines using Chainlink VRM for
-                  generating random numbers.{" "}
+                  Provably fair betting machines using{" "}
+                  <a href="https://docs.chain.link/docs/chainlink-vrf">
+                    Chainlink VRF
+                  </a>{" "}
+                  for generating random numbers.{" "}
                   <Link route="/play">
-                    <a href="#">Play machines</a>
+                    <strong>
+                      <a href="#">Play machines</a>
+                    </strong>
                   </Link>{" "}
                   and bet on random numbers with instant payouts or{" "}
                   <Link route="/factory">
-                    <a href="#">create a machine</a>
+                    <strong>
+                      <a href="#">create a machine</a>
+                    </strong>
                   </Link>{" "}
                   for others to play.
                 </p>
                 <p>
                   Each machine must be funded with enough ETH to pay out any
                   potential winnings plus enough LINK to request random numbers
-                  before play is available.{" "}
+                  before play is available.
+                </p>
+                <p>
                   <Link route="/play">
-                    <a href="#">
-                      Here is a list of verified machines ready to be played!
-                    </a>
+                    <strong>
+                      <a href="#">
+                        Here is a list of verified machines ready to be played!
+                      </a>
+                    </strong>
                   </Link>
                 </p>
                 <p>
                   Lucky Machines can be shut down at any time and all funds
                   cashed out to the owner, although any unplayed bets cannot be
-                  withdrawn. Unplayed bets may be refunded to the player who
-                  placed the bet upon request to the contract.
+                  withdrawn. Unplayed bets, if any, may be refunded to the
+                  player who placed the bet upon request to the contract.
                 </p>
                 <p>
                   The minimum bet, maximum bet, number of pickable values, and
