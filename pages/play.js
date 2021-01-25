@@ -331,7 +331,7 @@ class Play extends Component {
           </Grid.Row>
         </Grid>
         <Grid style={{ paddingTop: "10px" }}>
-          <Grid.Row centered columns={2}>
+          <Grid.Row centered>
             <Grid.Column color="black">
               <center>
                 <Form onSubmit={this.checkGame}>
@@ -357,9 +357,15 @@ class Play extends Component {
           </Grid.Row>
         </Grid>
         {this.state.summaryGameID ? (
-          <Grid style={{ paddingTop: "10px" }}>
-            <Grid.Row centered columns={2}>
-              <Grid.Column color="black">
+          <Grid style={{ paddingTop: "0px" }}>
+            <Grid.Row
+              centered
+              style={{
+                backgroundColor: "#313131",
+                color: "white"
+              }}
+            >
+              <Grid.Column>
                 <center>
                   <h2
                     style={{
@@ -377,7 +383,7 @@ class Play extends Component {
                 </center>
               </Grid.Column>
             </Grid.Row>
-            <Grid.Row centered columns={2}>
+            <Grid.Row centered>
               <Grid.Column color="grey">
                 <p>
                   <strong>Player:</strong>{" "}
