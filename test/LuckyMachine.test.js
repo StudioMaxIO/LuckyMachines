@@ -3,8 +3,8 @@ const ganache = require("ganache-cli");
 const Web3 = require("web3");
 const web3 = new Web3(ganache.provider({ gasLimit: 100000000 }));
 
-const compiledFactory = require("../ethereum/build/LuckyMachineFactory.json");
-const compiledMachine = require("../ethereum/build/LuckyMachine.json");
+const compiledFactory = require("../ethereum/build/test/LuckyMachineFactory.json");
+const compiledMachine = require("../ethereum/build/test/LuckyMachine.json");
 
 let accounts;
 let factory;
@@ -29,10 +29,11 @@ beforeEach(async () => {
 
   [machineAddress] = await factory.methods.getMachines().call();
   machine = await new web3.eth.Contract(compiledMachine.abi, machineAddress);
-  await machine.methods.fundMachine().send({
+
+  await web3.eth.sendTransaction({
     from: accounts[0],
-    value: web3.utils.toWei("1", "ether"),
-    gas: "10000000"
+    to: machineAddress,
+    value: web3.utils.toWei("1", "ether")
   });
 });
 
@@ -52,7 +53,7 @@ describe("Lucky Machines", () => {
       });
     } catch (err) {
       errorMessage = err.message;
-      console.log(err.message);
+      // console.log(err.message);
     }
     assert(errorMessage != "none");
   });
@@ -60,7 +61,7 @@ describe("Lucky Machines", () => {
   it("Maximum bet enforced", async () => {
     let errorMessage = "none";
     try {
-      await machine.methods.testPlaceBetFor(accounts[0], "3", "2").send({
+      await machine.methods.testPlaceBetFor(accounts[3], "3", "3").send({
         from: accounts[0],
         value: web3.utils.toWei("0.2", "ether"),
         gas: "10000000"
@@ -69,7 +70,11 @@ describe("Lucky Machines", () => {
       errorMessage = err.message;
       console.log(err.message);
     }
-    assert(errorMessage != "none");
+    const finalAccountBalance = await web3.eth.getBalance(accounts[3]);
+    // console.log("Final Balance:", finalAccountBalance);
+    assert(errorMessage == "none");
+    assert.ok(finalAccountBalance >= "100300000000000000000");
+    assert.ok(finalAccountBalance < "100600000000000000000");
   });
 
   it("only play unplayed game", async () => {
@@ -93,7 +98,7 @@ describe("Lucky Machines", () => {
       });
     } catch (err) {
       errorMessage = err.message;
-      console.log(err.message);
+      // console.log(err.message);
     }
     assert(errorMessage != "none");
   });
@@ -116,7 +121,7 @@ describe("Lucky Machines", () => {
         });
     } catch (err) {
       errorMessage = err.message;
-      console.log(err.message);
+      // console.log(err.message);
     }
     assert(errorMessage != "none");
   });
@@ -124,10 +129,10 @@ describe("Lucky Machines", () => {
   it("machine can be closed down", async () => {
     const openingBalance = web3.eth.getBalance(machine.options.address);
     if (openingBalance == 0) {
-      await machine.methods.fundMachine().send({
+      await web3.eth.sendTransaction({
         from: accounts[0],
-        value: web3.utils.toWei("1", "ether"),
-        gas: "3000000"
+        to: machineAddress,
+        value: web3.utils.toWei("1", "ether")
       });
     }
     try {
@@ -177,16 +182,16 @@ describe("Lucky Machines", () => {
       gas: "3000000"
     });
     const finalAccountBalance = await web3.eth.getBalance(accounts[1]);
-    console.log(
-      "Starting Balance:",
-      web3.utils.fromWei(startingAccountBalance, "ether")
-    );
-    console.log(
-      "Final Balance:",
-      web3.utils.fromWei(finalAccountBalance, "ether")
-    );
+    // console.log(
+    //   "Starting Balance:",
+    //   web3.utils.fromWei(startingAccountBalance, "ether")
+    // );
+    // console.log(
+    //   "Final Balance:",
+    //   web3.utils.fromWei(finalAccountBalance, "ether")
+    // );
 
-    assert.ok(finalAccountBalance >= "100.3");
+    assert.ok(finalAccountBalance >= "100300000000000000000");
   });
 
   it("unplayed bets removed after game played", async () => {
@@ -202,11 +207,11 @@ describe("Lucky Machines", () => {
   it("unplayed game can be refunded", async () => {
     const startingAccountBalance = await web3.eth.getBalance(accounts[2]);
 
-    //add funding since this game is contrived, not an actual bet placed
-    await machine.methods.fundMachine().send({
+    // add funding since this game is contrived, not an actual bet placed
+    await web3.eth.sendTransaction({
       from: accounts[0],
-      value: web3.utils.toWei("0.1", "ether"),
-      gas: "3000000"
+      to: machineAddress,
+      value: web3.utils.toWei("0.1", "ether")
     });
 
     // create game that hasn't been played
@@ -232,8 +237,8 @@ describe("Lucky Machines", () => {
     const finalAccountBalance = await web3.eth.getBalance(accounts[2]);
     const difference = finalAccountBalance - startingAccountBalance;
 
-    console.log("Starting Balance:", startingAccountBalance);
-    console.log("Final Balance:", finalAccountBalance);
+    // console.log("Starting Balance:", startingAccountBalance);
+    // console.log("Final Balance:", finalAccountBalance);
 
     assert.ok(
       finalAccountBalance >=
