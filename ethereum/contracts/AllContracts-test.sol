@@ -204,7 +204,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     uint public maxPick;
     uint public maxBet;
     uint public minBet;
-    uint private _unplayedBets;
+    uint public _unplayedBets; // only public for test contract
     uint private _currentGame;
     address payable public payoutAddress;
     uint public payout; // Multiplier, e.g. 10X: payout (10) * bet (X)
@@ -588,14 +588,14 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         lastGameCreated[player] = _currentGame;
     }
 
-    function testPlayGame(uint gameID, uint256 testRandomNumber) internal {
+    function testPlayGame(uint gameID, uint256 testRandomNumber) public {
         require(games[gameID].played == false, "game already played");
         bytes32 reqID = keccak256(abi.encodePacked(now, block.difficulty, msg.sender));
         _gameRequests[reqID] = gameID;
         testFulfillRandomness(reqID, testRandomNumber);
     }
 
-    function testFulfillRandomness(bytes32 requestId, uint256 randomness) internal {
+    function testFulfillRandomness(bytes32 requestId, uint256 randomness) public {
         Game storage g = games[_gameRequests[requestId]];
         if(g.id > 0 && g.played == false){
             if(g.bet > maxBet) {
