@@ -2,6 +2,7 @@ import React from "react";
 import { Container, Grid } from "semantic-ui-react";
 import Head from "next/head";
 import Header from "./Header";
+import Footer from "./Footer";
 
 const Layout = props => {
   return (
@@ -14,6 +15,7 @@ const Layout = props => {
       </Head>
       <Header page={props.page ? props.page : "dashboard"} />
       {props.children}
+      <Footer />
     </Container>
   );
 };
