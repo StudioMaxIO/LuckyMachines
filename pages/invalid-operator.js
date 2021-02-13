@@ -17,8 +17,9 @@ import Layout from "../components/Layout";
 import { Link, Router } from "../routes";
 import LuckyMachine from "../ethereum/luckyMachine";
 import web3 from "../ethereum/web3";
+const s = require("../settings");
 
-class Operate extends Component {
+class InvalidOperator extends Component {
   state = {
     ethBalance: "",
     linkBalance: "",
@@ -44,6 +45,14 @@ class Operate extends Component {
   }
 
   async componentDidMount() {
+    if (global.chainID == "0") {
+      global.chainID = await web3.currentProvider.request({
+        method: "eth_chainId"
+      });
+    }
+    if (global.chainID != s.REQUIRED_CHAIN_ID) {
+      window.location.assign("/incorrect-chain");
+    }
     this._isMounted = true;
   }
 
@@ -98,4 +107,4 @@ class Operate extends Component {
   }
 }
 
-export default Operate;
+export default InvalidOperator;
