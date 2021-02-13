@@ -10,6 +10,9 @@ if (typeof window !== "undefined" && typeof window.ethereum !== "undefined") {
   window.ethereum.on("accountsChanged", function(accounts) {
     window.location.reload(false);
   });
+  window.ethereum.on("chainChanged", function(_chainID) {
+    window.location.reload();
+  });
 } else {
   // on the server or user is not running metamask
   const provider = new Web3.providers.HttpProvider(process.env.INFURA_API);

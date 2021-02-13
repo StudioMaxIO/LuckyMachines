@@ -17,6 +17,7 @@ import Layout from "../components/Layout";
 import { Link, Router } from "../routes";
 import LuckyMachine from "../ethereum/luckyMachine";
 import web3 from "../ethereum/web3";
+const s = require("../settings");
 
 class Play extends Component {
   state = {
@@ -42,6 +43,7 @@ class Play extends Component {
     //const project = Project(props.query.address);
 
     this._isMounted = false;
+
     const luckyMachine = LuckyMachine(props.query.address);
     const summary = await luckyMachine.methods.getSummary().call();
 
@@ -57,12 +59,21 @@ class Play extends Component {
 
   async componentDidMount() {
     this._isMounted = true;
-    this.setState({
-      bet: web3.utils.fromWei(this.props.minimumBet, "ether")
-    });
-    if (this.props.gameID != "") {
-      //this.setState({ summaryGameID: this.props.gameID });
-      this.loadGame();
+    if (global.chainID == "0") {
+      global.chainID = await web3.currentProvider.request({
+        method: "eth_chainId"
+      });
+    }
+    if (global.chainID != s.REQUIRED_CHAIN_ID) {
+      window.location.assign("/incorrect-chain");
+    } else {
+      this.setState({
+        bet: web3.utils.fromWei(this.props.minimumBet, "ether")
+      });
+      if (this.props.gameID != "") {
+        //this.setState({ summaryGameID: this.props.gameID });
+        this.loadGame();
+      }
     }
   }
 

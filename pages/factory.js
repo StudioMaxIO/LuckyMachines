@@ -32,6 +32,14 @@ class Factory extends Component {
 
   async componentDidMount() {
     this._isMounted = true;
+    if (global.chainID == "0") {
+      global.chainID = await web3.currentProvider.request({
+        method: "eth_chainId"
+      });
+    }
+    if (global.chainID != s.REQUIRED_CHAIN_ID) {
+      window.location.assign("/incorrect-chain");
+    }
   }
 
   componentWillUnmount() {
