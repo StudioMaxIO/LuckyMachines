@@ -56,6 +56,7 @@ class Factory extends Component {
       const factory = await LuckyMachineFactory(factoryAddress);
       const newMachine = await factory.methods
         .createMachine(
+          s.MACHINE_COORDINATOR,
           web3.utils.toWei(this.state.maxBet, "ether"),
           web3.utils.toWei(this.state.minBet, "ether"),
           this.state.maxPick,
@@ -150,7 +151,7 @@ class Factory extends Component {
                     <Label>Payout:</Label>
                     <br />
                     <Input
-                      label="X"
+                      label=": 1"
                       labelPosition="right"
                       value={this.state.payout}
                       style={{ padding: "5px" }}
