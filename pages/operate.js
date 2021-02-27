@@ -199,6 +199,20 @@ class Operate extends Component {
               </strong>
             </Grid.Column>
           </Grid.Row>
+          <Grid.Row style={{ marginTop: "-28px" }}>
+            <Grid.Column></Grid.Column>
+            <Grid.Column width={"6"}>
+              <a
+                href={
+                  "https://kovan.etherscan.io/address/" + this.props.address
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View on Etherscan
+              </a>
+            </Grid.Column>
+          </Grid.Row>
           <Grid.Row style={{ marginTop: "-5px", zIndex: "10000" }}>
             <Grid.Column></Grid.Column>
             <Grid.Column width={"6"}>

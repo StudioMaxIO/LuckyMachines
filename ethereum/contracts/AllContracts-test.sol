@@ -173,12 +173,87 @@ abstract contract VRFConsumerBase is VRFRequestIDBase {
   }
 }
 
-contract LuckyMachine is VRFConsumerBase, Ownable {
-
+contract LuckyMachineCoordinator is VRFConsumerBase, Ownable {
     using SafeMathChainlink for uint256;
 
     bytes32 internal keyHash;
     uint256 internal fee;
+
+    mapping(bytes32 => address payable) private _machineRequests;
+
+    constructor()
+        //KOVAN ADDRESSES
+        VRFConsumerBase(
+            0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
+            0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
+        ) public {
+            keyHash = 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4;
+            fee = 2 * 10 ** 18; // 2 LINK
+    }
+
+    /**
+     * @dev Generates a seed to use for the VRF randomness
+     */
+    function getSeed() internal view returns(uint256) {
+        return uint(keccak256(abi.encodePacked(block.number - 1, now)));
+    }
+
+    /**
+     * @dev Can update vrfCoordinator if access to node is compromised. This should not
+     * be updated unless you are sure what you are doing.
+     */
+    function setVRFCoordinator(address _vrfCoordinator) public onlyOwner {
+        vrfCoordinator = _vrfCoordinator;
+    }
+
+    /**
+     * @dev Can update keyHash if access to node is compromised. This should not
+     * be updated unless you are sure what you are doing.
+     */
+    function setKeyHash(bytes32 _keyHash) public onlyOwner {
+        keyHash = _keyHash;
+    }
+
+    /**
+     * @dev Can update LINK address if necessary. Should not have to call this, but here
+     * in case testnet address is set or token address updated for any reason.
+     */
+    function setLINK(address _linkAddress) public onlyOwner {
+        LINK = LinkTokenInterface(_linkAddress);
+    }
+
+    function getRandomNumber() public returns(bytes32 requestID){
+
+        //TODO: update or dont use seed
+        uint256 seed = 1;
+        require(LINK.balanceOf(msg.sender) > fee, "Not enough LINK");
+        LINK.transferFrom(msg.sender, address(this), fee);
+        bytes32 rid = requestRandomness(keyHash, fee, seed);
+        _machineRequests[rid] = msg.sender;
+        return rid;
+    }
+
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+        LuckyMachine machine = LuckyMachine(_machineRequests[requestId]);
+        machine.fulfillRandomness(requestId, randomness);
+    }
+
+    function withdrawEth(uint amount) public onlyOwner {
+        msg.sender.transfer(amount);
+    }
+
+    function withdrawLink(uint amount) public onlyOwner {
+        LINK.transfer(msg.sender, amount);
+    }
+}
+
+contract LuckyMachine is Ownable {
+
+    LinkTokenInterface internal LINK;
+
+    using SafeMathChainlink for uint256;
+
+    address public machineCoordinator;
 
     struct Game {
         uint id;
@@ -204,10 +279,10 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     uint public maxPick;
     uint public maxBet;
     uint public minBet;
-    uint public _unplayedBets; // only public for test contract
+    uint private _unplayedBets;
     uint private _currentGame;
     address payable public payoutAddress;
-    uint public payout; // Multiplier, e.g. 10X: payout (10) * bet (X)
+    uint public payout; // Payout Ratio (payout : 1), e.g. 10 : 1 = payout (10) * bet (X)
 
     mapping(address => bool) public authorizedAddress;
     mapping(address => bool) public gasFreeBetAllowed;
@@ -218,15 +293,8 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
 
     event GamePlayed(address _player, uint256 _bet, uint256 _pick, uint256 _winner, uint256 _payout);
 
-    constructor(address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout)
-        //KOVAN ADDRESSES
-        VRFConsumerBase(
-            0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
-            0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
-        ) public {
-            keyHash = 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4;
-            fee = 0.1 * 10 ** 18; // 0.1 LINK
-
+    constructor(address _machineCoordinator, address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout) public {
+            machineCoordinator = _machineCoordinator;
             _currentGame = 1;
             _unplayedBets = 0;
             payoutAddress = _payoutAddress;
@@ -246,6 +314,12 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
             gas9 = 1;
             gas10 = 1;
             gas11 = 1;
+
+            // SET TO KOVAN LINK ADDRESS
+            LINK = LinkTokenInterface(address(0xa36085F69e2889c224210F603D836748e7dC0088));
+            uint256 approvalAmount = 0;
+            approvalAmount -= 1;
+            LINK.approve(machineCoordinator, approvalAmount);
     }
 
     receive() external payable {
@@ -338,19 +412,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         lastGameCreated[player] = _currentGame;
     }
 
-    /* Not ready or tested for production
-    function gasFreeBetFor(address payable player, uint pick) public payable {
-        // This does not check for payout plus gas fees
-        // If contract balance is too low to cover both,
-        // game will be stuck unplayed.
-        uint256 startGas = gasleft();
-        require(gasFreeBetAllowed[player], "gas free bet not allowed");
-        safeBetFor(player, pick);
-        uint256 gasUsed = startGas - gasleft();
-        uint gasPrice = tx.gasprice;
-        msg.sender.transfer(gasUsed.mul(gasPrice));
-    }*/
-
     /**
      * @dev Creates a Game record, which is updated as game is played.
      */
@@ -369,14 +430,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     /**
-     * @dev Generates a seed to use for the VRF randomness
-     */
-    function getSeed() internal view returns(uint256) {
-        Game memory g = games[_currentGame];
-        return uint(keccak256(abi.encodePacked(block.number, now, g.pick, g.bet, g.id)));
-    }
-
-    /**
      * @dev If game is ready to be played, but random number not yet generated,
      * this function may be called. Limited to only when bet is placed to avoid
      * over-calling / over-spending Link since random number is generated with
@@ -385,7 +438,7 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
      */
     function playGame(uint gameID) internal {
         require(games[gameID].played == false, "game already played");
-        bytes32 reqID = getRandomNumber(getSeed());
+        bytes32 reqID = getRandomNumber();
         _gameRequests[reqID] = gameID;
     }
 
@@ -393,16 +446,18 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
      * @dev Requests a random number, which will be returned through the
      * fulfillRandomness() function.
      */
-    function getRandomNumber(uint256 seed) internal returns (bytes32 requestId) {
-        require(LINK.balanceOf(address(this)) > fee, "Not enough LINK");
-        return requestRandomness(keyHash, fee, seed);
+    function getRandomNumber() internal returns (bytes32 requestId) {
+        LuckyMachineCoordinator mc = LuckyMachineCoordinator(machineCoordinator);
+        return mc.getRandomNumber();
     }
 
     /**
      * @dev Called by VRF Coordinator only once number is generated. Gas reserves are
      * refilled here so they can be cleared for gas savings when next bet is placed.
      */
-    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) external {
+        // ONLY CALLABLE BY MACHINE COORDINATOR
+        require(msg.sender == machineCoordinator);
         //randomResult = randomness;
         Game storage g = games[_gameRequests[requestId]];
         if(g.id > 0 && g.played == false){
@@ -474,17 +529,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     /**
-     * @dev Set group of addresses to be eligible for gas free bets. Note: currently
-     * gasFreeBetFor() not enabled, however this value could be checked by operator
-     * and bets placed on behalf of user, thereby covring the gas costs.
-     */
-    function allowGasFreeBet(address[] memory userAddresses, bool allowed) public onlyAuthorized{
-        for (uint i = 0; i < userAddresses.length; i++){
-            gasFreeBetAllowed[userAddresses[i]] = allowed;
-        }
-    }
-
-    /**
      * @dev Withdraw specified amount of ETH from machine. Amount must be less than
      * any unplayed bets in machine to allow for refunds.
      */
@@ -510,30 +554,6 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
     }
 
     /**
-     * @dev Can update vrfCoordinator if access to node is compromised. This should not
-     * be updated unless you are sure what you are doing.
-     */
-    function setVRFCoordinator(address _vrfCoordinator) public onlyOwner {
-        vrfCoordinator = _vrfCoordinator;
-    }
-
-    /**
-     * @dev Can update keyHash if access to node is compromised. This should not
-     * be updated unless you are sure what you are doing.
-     */
-    function setKeyHash(bytes32 _keyHash) public onlyOwner {
-        keyHash = _keyHash;
-    }
-
-    /**
-     * @dev Can update LINK address if necessary. Should not have to call this, but here
-     * in case testnet address is set or token address updated for any reason.
-     */
-    function setLINK(address _linkAddress) public onlyOwner {
-        LINK = LinkTokenInterface(_linkAddress);
-    }
-
-    /**
      * @dev Updates the address to which all withdrawals of ETH & LINK will be sent. If
      * machine is closed (all funds withdrawn), this address receives all available funds.
      */
@@ -554,7 +574,15 @@ contract LuckyMachine is VRFConsumerBase, Ownable {
         if (LINK.balanceOf(address(this)) > 0) {
             LINK.transfer(payoutAddress, LINK.balanceOf(address(this)));
         }
+    }
 
+    /**
+     * @dev Can update LINK address if necessary. Should not have to call this,
+     * but herein case token address is updated for any reason. Can also be set to any
+     * ERC-20 token in case of other tokens inadvertently sent to contract.
+     */
+    function setLINK(address _linkAddress) public onlyOwner {
+        LINK = LinkTokenInterface(_linkAddress);
     }
 
     /**
@@ -650,8 +678,8 @@ contract LuckyMachineFactory{
      * @dev Used to create a LuckyMachine that can be verified and included in the
      * factory list.
      */
-    function createMachine(uint maxBet, uint minBet, uint maxPick, uint payout) public returns(address){
-        LuckyMachine newMachine = new LuckyMachine(msg.sender, maxBet, minBet, maxPick, payout);
+    function createMachine(address machineCoordinator, uint maxBet, uint minBet, uint maxPick, uint payout) public returns(address){
+        LuckyMachine newMachine = new LuckyMachine(machineCoordinator, msg.sender, maxBet, minBet, maxPick, payout);
         newMachine.transferOwnership(msg.sender);
         address newMachineAddress = address(newMachine);
         machines.push(newMachineAddress);
