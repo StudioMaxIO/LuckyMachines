@@ -1,8 +1,0 @@
-const settings = {
-  FACTORY_ADDRESS: "0xb5BD86c3Ca7b4bfb6A57286FC48bBF189a332851",
-  MACHINE_COORDINATOR: "0x401ab5c736054cE8692A378D33d723dcaEB8841F",
-  REQUIRED_CHAIN_ID: "0x2a",
-  REQUIRED_CHAIN_NAME: "Kovan Test Network"
-};
-
-module.exports = settings;
