@@ -1,8 +1,48 @@
 pragma solidity ^0.6.0;
 
 // SPDX-License-Identifier: MIT
-import "./VRFConsumerBase.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+
+import "@chainlink/contracts/src/v0.6/vendor/SafeMathChainlink.sol";
+import "@chainlink/contracts/src/v0.6/interfaces/LinkTokenInterface.sol";
+import "@chainlink/contracts/src/v0.6/VRFRequestIDBase.sol";
+
+abstract contract VRFConsumerBase is VRFRequestIDBase {
+
+  using SafeMathChainlink for uint256;
+
+  function fulfillRandomness(bytes32 requestId, uint256 randomness)
+    internal virtual;
+
+  function requestRandomness(bytes32 _keyHash, uint256 _fee, uint256 _seed)
+    internal returns (bytes32 requestId)
+  {
+    LINK.transferAndCall(vrfCoordinator, _fee, abi.encode(_keyHash, _seed));
+
+    uint256 vRFSeed  = makeVRFInputSeed(_keyHash, _seed, address(this), nonces[_keyHash]);
+
+    nonces[_keyHash] = nonces[_keyHash].add(1);
+    return makeRequestId(_keyHash, vRFSeed);
+  }
+
+  //NOTE: this is set to immutable in original contract. Using this due to
+  // temporary token used on Polygon/Matic. Will need to be updated eventually.
+  LinkTokenInterface internal LINK;
+  address immutable private vrfCoordinator;
+
+  mapping(bytes32 /* keyHash */ => uint256 /* nonce */) private nonces;
+
+  constructor(address _vrfCoordinator, address _link) public {
+    vrfCoordinator = _vrfCoordinator;
+    LINK = LinkTokenInterface(_link);
+  }
+
+  function rawFulfillRandomness(bytes32 requestId, uint256 randomness) external {
+    require(msg.sender == vrfCoordinator, "Only VRFCoordinator can fulfill");
+    fulfillRandomness(requestId, randomness);
+  }
+}
+
 
 contract LuckyMachineCoordinator is VRFConsumerBase, Ownable {
     using SafeMathChainlink for uint256;
