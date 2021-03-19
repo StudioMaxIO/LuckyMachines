@@ -52,14 +52,14 @@ contract LuckyMachineCoordinator is VRFConsumerBase, Ownable {
 
     mapping(bytes32 => address payable) private _machineRequests;
 
-    constructor()
+    constructor(address _coordinator, address _linkToken, bytes32 _keyHash, uint256 _fee)
         //KOVAN ADDRESSES
         VRFConsumerBase(
-            0x8C7382F9D8f56b33781fE506E897a4F1e2d17255, // VRF Coordinator
-            0x326C977E6efc84E512bB9C30f76E30c160eD06FB  // LINK Token
+            _coordinator, // VRF Coordinator
+            _linkToken  // LINK Token
         ) public {
-            keyHash = 0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4;
-            fee = 0.0001 * 10 ** 18; // 0.0001 LINK
+            keyHash = _keyHash;
+            fee = _fee;
     }
 
     receive() external payable {
@@ -71,6 +71,13 @@ contract LuckyMachineCoordinator is VRFConsumerBase, Ownable {
      */
     function setKeyHash(bytes32 _keyHash) public onlyOwner {
         keyHash = _keyHash;
+    }
+
+    /**
+     * @dev Can update fee if operator changes fee amount.
+     */
+    function setFee(uint256 _fee) public onlyOwner {
+      fee = _fee;
     }
 
     /**
