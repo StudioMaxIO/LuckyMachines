@@ -215,10 +215,10 @@ contract LuckyMachine is Ownable {
 
     /**
      * @dev Returns whether a winning bet can by paid out by machine. Balance of
-     * machine must be at least value of bet + (value of bet * payout).
+     * machine must be at least (value of bet * payout).
      */
     function betPayable(uint bet) public view returns(bool){
-        return (address(this).balance.sub(_unplayedBets) >= bet.mul(payout).add(bet));
+        return (address(this).balance.sub(_unplayedBets) >= bet.mul(payout));
     }
 
     function canPayFee(uint _fee) public view returns(bool){
