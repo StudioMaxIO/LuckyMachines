@@ -1,7 +1,7 @@
 pragma solidity ^0.6.0;
 
 // SPDX-License-Identifier: MIT
-import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
+import "./VRFConsumerBase.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract LuckyMachineCoordinator is VRFConsumerBase, Ownable {
