@@ -5,42 +5,49 @@ const mnemonic = process.env.MNEMONIC;
 const kovan_url = process.env.RPC_URL_KOVAN;
 const mumbai_url = process.env.RPC_URL_MUMBAI;
 const matic_url = process.env.RPC_URL_MATIC;
+const mainnet_url = process.env.RPC_URL_MAINNET;
 
 module.exports = {
   networks: {
     cldev: {
       host: "127.0.0.1",
       port: 8545,
-      network_id: "*",
+      network_id: "*"
     },
     ganache: {
       host: "127.0.0.1",
       port: 7545,
-      network_id: "*",
+      network_id: "*"
     },
     kovan: {
       provider: () => {
         return new HDWalletProvider(mnemonic, kovan_url);
       },
       network_id: "42",
-      skipDryRun: true,
+      skipDryRun: true
     },
     matic: {
       provider: () => {
         return new HDWalletProvider(mnemonic, matic_url);
       },
-      network_id: "137",
+      network_id: "137"
     },
     mumbai: {
       provider: () => {
         return new HDWalletProvider(mnemonic, mumbai_url);
       },
-      network_id: "80001",
+      network_id: "80001"
     },
+    mainnet: {
+      provider: () => {
+        return new HDWalletProvider(mnemonic, mainnet_url);
+      },
+      network_id: "1"
+    }
   },
   compilers: {
     solc: {
-      version: "0.6.12",
-    },
-  },
+      version: "0.6.12"
+    }
+  }
 };
