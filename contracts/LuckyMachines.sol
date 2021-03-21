@@ -53,7 +53,6 @@ contract LuckyMachineCoordinator is VRFConsumerBase, Ownable {
     mapping(bytes32 => address payable) private _machineRequests;
 
     constructor(address _coordinator, address _linkToken, bytes32 _keyHash, uint256 _fee)
-        //KOVAN ADDRESSES
         VRFConsumerBase(
             _coordinator, // VRF Coordinator
             _linkToken  // LINK Token
