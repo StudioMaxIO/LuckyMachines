@@ -51,6 +51,8 @@ contract LuckyMachineCoordinator is VRFConsumerBase, Ownable {
     uint256 internal fee;
 
     mapping(bytes32 => address payable) private _machineRequests;
+    mapping(bytes32 => uint8) private _requestQuantities;
+    uint8 public maxRandomNumbers;
 
     constructor(address _coordinator, address _linkToken, bytes32 _keyHash, uint256 _fee)
         VRFConsumerBase(
@@ -59,6 +61,7 @@ contract LuckyMachineCoordinator is VRFConsumerBase, Ownable {
         ) public {
             keyHash = _keyHash;
             fee = _fee;
+            maxRandomNumbers = 78;
     }
 
     receive() external payable {
@@ -87,7 +90,8 @@ contract LuckyMachineCoordinator is VRFConsumerBase, Ownable {
         LINK = LinkTokenInterface(_linkAddress);
     }
 
-    function getRandomNumber() external returns(bytes32 requestID){
+    function getRandomNumbers(uint8 quantity) external returns(bytes32 requestID){
+        require(quantity <= maxRandomNumbers && quantity > 0, "quantity outside of bounds");
         require(LINK.balanceOf(address(this)) >= fee || LINK.balanceOf(msg.sender) >= fee, "Not enough LINK");
         if (LINK.balanceOf(address(this)) < fee) {
             LINK.transferFrom(msg.sender, address(this), fee);
@@ -95,12 +99,54 @@ contract LuckyMachineCoordinator is VRFConsumerBase, Ownable {
         uint256 seed = uint256(blockhash(block.number - 1));
         bytes32 rid = requestRandomness(keyHash, fee, seed);
         _machineRequests[rid] = msg.sender;
+        _requestQuantities[rid] = quantity;
         return rid;
     }
 
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         LuckyMachine machine = LuckyMachine(_machineRequests[requestId]);
-        machine.fulfillRandomness(requestId, randomness);
+        if(_requestQuantities[requestId] > 1){
+          uint256[] memory randomArray = sliceNumber(randomness, _requestQuantities[requestId]);
+          // send array to machine
+          machine.fulfillRandomness(requestId, randomArray);
+        } else {
+          uint256[] memory numberArray = new uint256[](1);
+          numberArray[0] = randomness;
+          machine.fulfillRandomness(requestId, numberArray);
+        }
+    }
+
+    function sliceNumber(uint256 inputNumber, uint8 elements) internal returns (uint256[] memory){
+
+        uint256[] memory numberArray = new uint256[](elements);
+        uint digitsPerSection = 78 / elements;
+
+        // get last digits
+        uint lastDigits = lastN(inputNumber, digitsPerSection);
+
+        // add to end of array
+        numberArray[elements - 1] = lastDigits;
+
+        // strip away digits added to the array
+        uint newNumber = (inputNumber - lastDigits) / (10 ** digitsPerSection);
+
+        for (uint i = (elements - 1); i > 0; i--) {
+            lastDigits = lastN(newNumber, digitsPerSection);
+            // add to end of array
+            numberArray[i-1] = lastDigits;
+            // strip away digits added to the array
+            newNumber = (newNumber - lastDigits) / (10 ** digitsPerSection);
+        }
+
+        return numberArray;
+    }
+
+    function lastN(uint number, uint n) public pure returns (uint) {
+        return number % 10 ** n;
+    }
+
+    function setMaxRandomQuantity(uint8 quantity) public onlyOwner {
+      maxRandomNumbers = quantity;
     }
 
     function getLinkBalance() public view returns(uint){
@@ -158,7 +204,7 @@ contract LuckyMachine is Ownable {
 
     event GamePlayed(address _player, uint256 _bet, uint256 _pick, uint256 _winner, uint256 _payout);
 
-    constructor(address payable _machineCoordinator, address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout) public {
+    constructor(address payable _machineCoordinator, address payable _payoutAddress,  address _linkToken, uint _maxBet, uint _minBet, uint _maxPick, uint _payout) public {
             machineCoordinator = _machineCoordinator;
             _currentGame = 1;
             _unplayedBets = 0;
@@ -180,8 +226,7 @@ contract LuckyMachine is Ownable {
             gas10 = 1;
             gas11 = 1;
 
-            // SET TO KOVAN LINK ADDRESS
-            LINK = LinkTokenInterface(address(0x326C977E6efc84E512bB9C30f76E30c160eD06FB));
+            LINK = LinkTokenInterface(_linkToken);
             uint256 approvalAmount = 0;
             approvalAmount -= 1;
             LINK.approve(machineCoordinator, approvalAmount);
@@ -320,17 +365,16 @@ contract LuckyMachine is Ownable {
      */
     function getRandomNumber() internal returns (bytes32 requestId) {
         LuckyMachineCoordinator mc = LuckyMachineCoordinator(machineCoordinator);
-        return mc.getRandomNumber();
+        return mc.getRandomNumbers(1);
     }
 
     /**
      * @dev Called by VRF Coordinator only once number is generated. Gas reserves are
      * refilled here so they can be cleared for gas savings when next bet is placed.
      */
-    function fulfillRandomness(bytes32 requestId, uint256 randomness) external {
+    function fulfillRandomness(bytes32 requestId, uint256[] memory randomness) external {
         // ONLY CALLABLE BY MACHINE COORDINATOR
         require(msg.sender == machineCoordinator);
-        //randomResult = randomness;
         Game storage g = games[_gameRequests[requestId]];
         if(g.id > 0 && g.played == false){
             if(g.bet > maxBet) {
@@ -339,7 +383,7 @@ contract LuckyMachine is Ownable {
             uint totalPayout = g.bet.mul(payout).add(g.bet);
             require(address(this).balance >= totalPayout, "Contract balance too low to play");
 
-            g.winner = randomness.mod(maxPick).add(1);
+            g.winner = randomness[0].mod(maxPick).add(1);
 
             g.played = true;
 
@@ -476,8 +520,8 @@ contract LuckyMachineFactory{
      * @dev Used to create a LuckyMachine that can be verified and included in the
      * factory list.
      */
-    function createMachine(address payable machineCoordinator, uint maxBet, uint minBet, uint maxPick, uint payout) public returns(address){
-        LuckyMachine newMachine = new LuckyMachine(machineCoordinator, msg.sender, maxBet, minBet, maxPick, payout);
+    function createMachine(address payable machineCoordinator, address linkToken, uint maxBet, uint minBet, uint maxPick, uint payout) public returns(address){
+        LuckyMachine newMachine = new LuckyMachine(machineCoordinator, msg.sender, linkToken, maxBet, minBet, maxPick, payout);
         newMachine.transferOwnership(msg.sender);
         address newMachineAddress = address(newMachine);
         machines.push(newMachineAddress);
