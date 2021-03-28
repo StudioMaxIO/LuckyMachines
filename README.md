@@ -11,6 +11,12 @@ The minimum bet, maximum bet, number of pickable values, and payout amounts are 
 Alpha running on Polygon / Matic mainnet at http://luckymachines.io.
 
 ### Use Lucky Machines to power your fair betting games:
+1. Install Contracts:
 ```bash
 npm install @luckymachines/contracts
+```
+
+2. Install Dependencies:
+```bash
+npm install
 ```
