@@ -1,116 +1,10 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-// SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts/access/Ownable.sol";
-
 import "@chainlink/contracts/src/v0.6/vendor/SafeMathChainlink.sol";
 import "@chainlink/contracts/src/v0.6/interfaces/LinkTokenInterface.sol";
-import "@chainlink/contracts/src/v0.6/VRFRequestIDBase.sol";
-
-abstract contract VRFConsumerBase is VRFRequestIDBase {
-
-  using SafeMathChainlink for uint256;
-
-  function fulfillRandomness(bytes32 requestId, uint256 randomness)
-    internal virtual;
-
-  function requestRandomness(bytes32 _keyHash, uint256 _fee, uint256 _seed)
-    internal returns (bytes32 requestId)
-  {
-    LINK.transferAndCall(vrfCoordinator, _fee, abi.encode(_keyHash, _seed));
-
-    uint256 vRFSeed  = makeVRFInputSeed(_keyHash, _seed, address(this), nonces[_keyHash]);
-
-    nonces[_keyHash] = nonces[_keyHash].add(1);
-    return makeRequestId(_keyHash, vRFSeed);
-  }
-
-  //NOTE: this is set to immutable in original contract. Using this due to
-  // temporary token used on Polygon/Matic. Will need to be updated eventually.
-  LinkTokenInterface internal LINK;
-  address immutable private vrfCoordinator;
-
-  mapping(bytes32 /* keyHash */ => uint256 /* nonce */) private nonces;
-
-  constructor(address _vrfCoordinator, address _link) public {
-    vrfCoordinator = _vrfCoordinator;
-    LINK = LinkTokenInterface(_link);
-  }
-
-  function rawFulfillRandomness(bytes32 requestId, uint256 randomness) external {
-    require(msg.sender == vrfCoordinator, "Only VRFCoordinator can fulfill");
-    fulfillRandomness(requestId, randomness);
-  }
-}
-
-
-contract LuckyMachineCoordinator is VRFConsumerBase, Ownable {
-    using SafeMathChainlink for uint256;
-
-    bytes32 internal keyHash;
-    uint256 internal fee;
-
-    mapping(bytes32 => address payable) private _machineRequests;
-
-    constructor(address _coordinator, address _linkToken, bytes32 _keyHash, uint256 _fee)
-        VRFConsumerBase(
-            _coordinator, // VRF Coordinator
-            _linkToken  // LINK Token
-        ) public {
-            keyHash = _keyHash;
-            fee = _fee;
-    }
-
-    receive() external payable {
-
-    }
-
-    /**
-     * @dev Shouldn't be updated unless set incorrectly to begin with.
-     */
-    function setKeyHash(bytes32 _keyHash) public onlyOwner {
-        keyHash = _keyHash;
-    }
-
-    /**
-     * @dev Can update fee if operator changes fee amount.
-     */
-    function setFee(uint256 _fee) public onlyOwner {
-      fee = _fee;
-    }
-
-    /**
-     * @dev Can update LINK address if necessary. Should not have to call this, but here
-     * in case token address updated for any reason.
-     */
-    function setLINK(address _linkAddress) public onlyOwner {
-        LINK = LinkTokenInterface(_linkAddress);
-    }
-
-    function getRandomNumber() external returns(bytes32 requestID){
-        require(LINK.balanceOf(address(this)) >= fee || LINK.balanceOf(msg.sender) >= fee, "Not enough LINK");
-        if (LINK.balanceOf(address(this)) < fee) {
-            LINK.transferFrom(msg.sender, address(this), fee);
-        }
-        uint256 seed = uint256(blockhash(block.number - 1));
-        bytes32 rid = requestRandomness(keyHash, fee, seed);
-        _machineRequests[rid] = msg.sender;
-        return rid;
-    }
-
-    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-        LuckyMachine machine = LuckyMachine(_machineRequests[requestId]);
-        machine.fulfillRandomness(requestId, randomness);
-    }
-
-    function getLinkBalance() public view returns(uint){
-        return LINK.balanceOf(address(this));
-    }
-
-    function withdrawLink() public onlyOwner {
-        LINK.transfer(msg.sender, LINK.balanceOf(address(this)));
-    }
-}
+import "./LuckyMachineCoordinator.sol";
 
 contract LuckyMachine is Ownable {
 
@@ -158,7 +52,7 @@ contract LuckyMachine is Ownable {
 
     event GamePlayed(address _player, uint256 _bet, uint256 _pick, uint256 _winner, uint256 _payout);
 
-    constructor(address payable _machineCoordinator, address payable _payoutAddress, uint _maxBet, uint _minBet, uint _maxPick, uint _payout) public {
+    constructor(address payable _machineCoordinator, address payable _payoutAddress,  address _linkToken, uint _maxBet, uint _minBet, uint _maxPick, uint _payout) public {
             machineCoordinator = _machineCoordinator;
             _currentGame = 1;
             _unplayedBets = 0;
@@ -180,8 +74,7 @@ contract LuckyMachine is Ownable {
             gas10 = 1;
             gas11 = 1;
 
-            // SET TO KOVAN LINK ADDRESS
-            LINK = LinkTokenInterface(address(0x326C977E6efc84E512bB9C30f76E30c160eD06FB));
+            LINK = LinkTokenInterface(_linkToken);
             uint256 approvalAmount = 0;
             approvalAmount -= 1;
             LINK.approve(machineCoordinator, approvalAmount);
@@ -320,17 +213,16 @@ contract LuckyMachine is Ownable {
      */
     function getRandomNumber() internal returns (bytes32 requestId) {
         LuckyMachineCoordinator mc = LuckyMachineCoordinator(machineCoordinator);
-        return mc.getRandomNumber();
+        return mc.getRandomNumbers(1);
     }
 
     /**
      * @dev Called by VRF Coordinator only once number is generated. Gas reserves are
      * refilled here so they can be cleared for gas savings when next bet is placed.
      */
-    function fulfillRandomness(bytes32 requestId, uint256 randomness) external {
+    function fulfillRandomness(bytes32 requestId, uint256[] memory randomness) external {
         // ONLY CALLABLE BY MACHINE COORDINATOR
         require(msg.sender == machineCoordinator);
-        //randomResult = randomness;
         Game storage g = games[_gameRequests[requestId]];
         if(g.id > 0 && g.played == false){
             if(g.bet > maxBet) {
@@ -339,7 +231,7 @@ contract LuckyMachine is Ownable {
             uint totalPayout = g.bet.mul(payout).add(g.bet);
             require(address(this).balance >= totalPayout, "Contract balance too low to play");
 
-            g.winner = randomness.mod(maxPick).add(1);
+            g.winner = randomness[0].mod(maxPick).add(1);
 
             g.played = true;
 
@@ -476,8 +368,8 @@ contract LuckyMachineFactory{
      * @dev Used to create a LuckyMachine that can be verified and included in the
      * factory list.
      */
-    function createMachine(address payable machineCoordinator, uint maxBet, uint minBet, uint maxPick, uint payout) public returns(address){
-        LuckyMachine newMachine = new LuckyMachine(machineCoordinator, msg.sender, maxBet, minBet, maxPick, payout);
+    function createMachine(address payable machineCoordinator, address linkToken, uint maxBet, uint minBet, uint maxPick, uint payout) public returns(address){
+        LuckyMachine newMachine = new LuckyMachine(machineCoordinator, msg.sender, linkToken, maxBet, minBet, maxPick, payout);
         newMachine.transferOwnership(msg.sender);
         address newMachineAddress = address(newMachine);
         machines.push(newMachineAddress);
