@@ -15,8 +15,3 @@ Alpha running on Polygon / Matic mainnet at http://luckymachines.io.
 ```bash
 npm install @luckymachines/contracts
 ```
-
-2. Install Dependencies:
-```bash
-npm install
-```
