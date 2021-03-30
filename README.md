@@ -8,4 +8,10 @@ Lucky Machines can be shut down at any time and all funds cashed out to the owne
 
 The minimum bet, maximum bet, number of pickable values, and payout amounts are set on a machine by machine basis, and can initially be customized to the owner's specification. Once the machine is created these values cannot be changed. All machine properties are easily inspectable through public variables in the machine contract.
 
-Currently running on the Kovan test network at http://kovan.luckymachines.io.
+Alpha running on Polygon / Matic mainnet at http://luckymachines.io.
+
+### Use Lucky Machines to power your fair betting games
+Install Contracts / ABIs:
+```bash
+npm install @luckymachines/contracts
+```
