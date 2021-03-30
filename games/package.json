@@ -1,0 +1,29 @@
+{
+  "name": "lucky-machines",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "mocha",
+    "dev": "node server.js",
+    "build": "next build",
+    "start": "next start"
+  },
+  "engines": {
+    "node": "^12.x"
+  },
+  "dependencies": {
+    "@luckymachines/contracts": "^0.1.0",
+    "dotenv": "^8.2.0",
+    "fs-extra": "^9.0.1",
+    "ganache-cli": "^6.12.1",
+    "mocha": "^8.2.1",
+    "next": "10.0.3",
+    "next-routes": "^1.4.2",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "semantic-ui-css": "^2.4.1",
+    "semantic-ui-react": "^2.0.1",
+    "solc": "^0.6.0",
+    "web3": "^1.3.0"
+  }
+}
