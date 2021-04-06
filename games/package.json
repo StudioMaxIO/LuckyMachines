@@ -9,18 +9,20 @@
     "start": "next start"
   },
   "engines": {
-    "node": "^12.x"
+    "node": "^15.x"
   },
   "dependencies": {
     "@luckymachines/contracts": "^0.1.0",
+    "@react-spring/web": "^9.0.0",
     "dotenv": "^8.2.0",
     "fs-extra": "^9.0.1",
     "ganache-cli": "^6.12.1",
     "mocha": "^8.2.1",
     "next": "10.0.3",
     "next-routes": "^1.4.2",
-    "react": "17.0.1",
-    "react-dom": "17.0.1",
+    "prop-types": "^15.7.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^2.0.1",
     "solc": "^0.6.0",

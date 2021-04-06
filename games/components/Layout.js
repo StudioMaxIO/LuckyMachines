@@ -4,7 +4,7 @@ import Head from "next/head";
 import Header from "./Header";
 import Footer from "./Footer";
 
-const Layout = (props) => {
+const Layout = props => {
   return (
     <Container>
       <Head>
