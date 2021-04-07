@@ -146,7 +146,7 @@ contract LuckyMachine is Ownable {
         lastGameCreated[player] = _currentGame;
     }
 
-    /**s
+    /**
      * @dev Returns Game ID, which can be queried for status of game using games('gameID').
      * Places bet after ensuring all conditions are met (bet within minimum - maximum
      * range, maximum pick not exceeded, winning bet is payable).
