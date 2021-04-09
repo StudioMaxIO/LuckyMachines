@@ -23,7 +23,7 @@ contract Jackpots {
         balance[msg.sender] = 0;
     }
 
-    function addToJackpot() public payable {
+    function addToJackpot() external payable {
         balance[msg.sender] = balance[msg.sender].add(msg.value);
     }
 
@@ -33,5 +33,12 @@ contract Jackpots {
 
     function getJackpotMachines() public view returns(address[] memory) {
         return jackpotMachines;
+    }
+
+    // DANGEROUS: This will associate this jackpot with another contract, may be unreversable
+    function transferJackpot(address newJackpotOwner) public {
+        balance[newJackpotOwner] = balance[newJackpotOwner].add(balance[msg.sender]);
+        balance[msg.sender] = 0;
+        registered[newJackpotOwner] = true;
     }
  }
