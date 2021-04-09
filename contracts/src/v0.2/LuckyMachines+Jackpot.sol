@@ -165,15 +165,15 @@ contract LuckyMachineJackpot is LuckyMachine {
         return mc.getRandomNumbers(quantity);
     }
 
-    function getJackpotMachineSummary() public view returns(uint, uint8[] memory, uint[] memory, uint, uint8, uint) {
-        //entryFee, payoutTiers, payouts, maxPick, totalPicks, currentJackpot
+    function getJackpotMachineSummary() public view returns(uint, uint8[] memory, uint[] memory, uint, uint8, uint, uint8) {
+        //entryFee, payoutTiers, payouts, maxPick, totalPicks, currentJackpot, jackpotContribution
         Jackpots jackpots = Jackpots(jackpotAddress);
         uint jackpotBal = jackpots.getBalance();
         uint[] memory tierPayouts = new uint[](winTiers.length);
         for (uint i = 0; i < winTiers.length; i++) {
             tierPayouts[i] = _payouts[winTiers[i]];
         }
-        return(minBet, winTiers, tierPayouts, maxPick, totalPicks, jackpotBal);
+        return(minBet, winTiers, tierPayouts, maxPick, totalPicks, jackpotBal, percentToJackpot);
     }
 
     // Lucky Machine functions to override:
