@@ -10,6 +10,7 @@ contract LuckyMachineJackpot is LuckyMachine {
     mapping(uint8 => uint256) internal _payouts; //(number of matches => amount paid out)
     uint8 public totalPicks;
     uint8[] internal winTiers;
+    uint8 public percentToJackpot;
 
     struct JackpotGame {
         uint id;
@@ -29,7 +30,7 @@ contract LuckyMachineJackpot is LuckyMachine {
     uint8 internal numPicksLimit = 25; //note: too many picks will return too small of numbers
     uint8 internal singlePickLimit = 100; // highest single pick, if too high some numbers will never get picked
 
-    constructor(address payable _jackpotAddress, address payable _machineCoordinator, address payable _payoutAddress,  address _linkToken, uint _entryFee, uint _maxPick, uint8 _totalPicks, uint8[] memory _winningMatchQuantities, uint[] memory _winningMatchPayouts)
+    constructor(address payable _jackpotAddress, address payable _machineCoordinator, address payable _payoutAddress,  address _linkToken, uint _entryFee, uint _maxPick, uint8 _totalPicks, uint8[] memory _winningMatchQuantities, uint[] memory _winningMatchPayouts, uint8 jackpotContribution)
             LuckyMachine(
                 _machineCoordinator,
                 _payoutAddress,
@@ -41,12 +42,14 @@ contract LuckyMachineJackpot is LuckyMachine {
             ) public {
                 require(_maxPick <= singlePickLimit, "Single pick limit exceeded");
                 require(_winningMatchQuantities.length == _winningMatchPayouts.length, "Match Qty & Win Payouts must be same length");
-                require(_winningMatchQuantities.length <= numPicksLimit);
+                require(_winningMatchQuantities.length <= numPicksLimit, "Can't be more winning tiers than pickable numbers");
+                require(jackpotContribution <= 100, "Contribution is a percentage in the range of 0 - 100");
                 totalPicks = _totalPicks;
                 for (uint8 i = 0; i < _winningMatchQuantities.length; i++) {
                     _payouts[_winningMatchQuantities[i]] = _winningMatchPayouts[i];
                 }
                 winTiers = _winningMatchQuantities;
+                percentToJackpot = jackpotContribution;
                 jackpotAddress = _jackpotAddress;
                 Jackpots jackpots = Jackpots(jackpotAddress);
                 jackpots.registerMachine();
@@ -207,6 +210,12 @@ contract LuckyMachineJackpot is LuckyMachine {
                 _unplayedBets = 0;
             }
 
+            Jackpots jackpots = Jackpots(jackpotAddress);
+
+            //Transfer portion of bet to jackpot
+            uint jackpotContrubution = g.bet.mul(percentToJackpot).div(100);
+            jackpots.addToJackpot{value:jackpotContrubution}();
+
             // Check for winning numbers
             uint8 winningPicks = checkPicks(g.picks, g.winners);
             uint totalPayout = 0;
@@ -215,7 +224,6 @@ contract LuckyMachineJackpot is LuckyMachine {
             if(winningPicks > 0) {
                 if (winningPicks == totalPicks) {
                     // Trigger jackpot payout
-                    Jackpots jackpots = Jackpots(jackpotAddress);
                     totalPayout = jackpots.getBalance();
                     jackpots.payoutJackpot(g.player);
                 } else {
@@ -293,7 +301,8 @@ contract LuckyMachineJackpotFactory{
                 uint maxPick,
                 uint8 totalPicks,
                 uint8[] memory winningMatchQuantities,
-                uint[] memory winningMatchPayouts
+                uint[] memory winningMatchPayouts,
+                uint8 jackpotContribution
             ) public returns(address){
                 LuckyMachineJackpot newMachine = new LuckyMachineJackpot(
                                                         jackpotAddress,
@@ -304,7 +313,8 @@ contract LuckyMachineJackpotFactory{
                                                         maxPick,
                                                         totalPicks,
                                                         winningMatchQuantities,
-                                                        winningMatchPayouts
+                                                        winningMatchPayouts,
+                                                        jackpotContribution
                                                     );
                 newMachine.transferOwnership(msg.sender);
                 address newMachineAddress = address(newMachine);
