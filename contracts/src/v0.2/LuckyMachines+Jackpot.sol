@@ -180,7 +180,7 @@ contract LuckyMachineJackpot is LuckyMachine {
         return jackpotGames[gameID].winners;
     }
 
-    function getPlayedPics(uint gameID) public view returns(uint[] memory){
+    function getPlayedPicks(uint gameID) public view returns(uint[] memory){
         return jackpotGames[gameID].picks;
     }
 
