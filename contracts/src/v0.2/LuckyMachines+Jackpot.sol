@@ -276,6 +276,12 @@ contract LuckyMachineJackpot is LuckyMachine {
         jackpots.addToJackpot{value:msg.value}();
     }
 
+    function transferJackpot(address recipient) public onlyOwner{
+        // WARNING: This may not be reversable. Make sure you want to transfer to the recipient machine.
+        Jackpots jackpots = Jackpots(jackpotAddress);
+        jackpots.transferJackpot(recipient);
+    }
+
     // disable unused functions
     function placeBetFor(address payable player, uint pick) override public payable{
         require(false, "Function not used in this contract. Use placeJackpotBetFor");
