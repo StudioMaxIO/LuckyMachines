@@ -284,7 +284,7 @@ class RockPaperScissors extends Component {
     const cpuSymbols = { 1: "👊", 2: "✋", 3: "✌️" };
     const playerSymbols = { 1: "✋", 2: "✌️", 3: "👊" };
     return (
-      <Layout page="rock-paper-scissors">
+      <Layout page="games">
         <Grid centered columns={5} style={{ marginTop: "10px" }}>
           <Grid.Row color="black">
             <h1

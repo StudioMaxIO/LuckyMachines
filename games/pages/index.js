@@ -20,7 +20,7 @@ class Dashboard extends Component {
 
   render() {
     return (
-      <Layout page="dashboard">
+      <Layout page="games">
         <Grid centered columns={6} style={{ marginTop: "10px" }}>
           <Grid.Row color="black">
             <h1
