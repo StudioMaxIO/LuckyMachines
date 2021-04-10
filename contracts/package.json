@@ -1,6 +1,6 @@
 {
   "name": "@luckymachines/contracts",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Lucky Machines contracts for betting dapps. Includes multi-draw and automatic payout on win. Only allows bets on machines that have been sufficiently funded.  Utilizes Chainlink VRF for provable fairness.",
   "main": "index.js",
   "scripts": {

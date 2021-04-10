@@ -176,6 +176,14 @@ contract LuckyMachineJackpot is LuckyMachine {
         return(minBet, winTiers, tierPayouts, maxPick, totalPicks, jackpotBal, percentToJackpot);
     }
 
+    function getWinningNumbers(uint gameID) public view returns(uint[] memory){
+        return jackpotGames[gameID].winners;
+    }
+
+    function getPlayedPics(uint gameID) public view returns(uint[] memory){
+        return jackpotGames[gameID].picks;
+    }
+
     // Lucky Machine functions to override:
     function betPayable(uint bet) override public view returns(bool){
         return (address(this).balance.sub(_unplayedBets) >= _payouts[winTiers[winTiers.length.sub(1)]]);
@@ -195,19 +203,20 @@ contract LuckyMachineJackpot is LuckyMachine {
             if(g.bet > maxBet) {
                 g.bet = maxBet;
             }
-            require(betPayable(1));
-
-            // store winning numbers
-            for (uint8 i = 0; i < totalPicks; i++) {
-                g.winners[i] = randomness[i].mod(maxPick).add(1);
-            }
-
-            g.played = true;
 
             if(_unplayedBets >= g.bet) {
                 _unplayedBets -= g.bet;
             } else {
                 _unplayedBets = 0;
+            }
+
+            require(betPayable(1));
+
+            g.played = true;
+
+            // store winning numbers
+            for (uint8 i = 0; i < totalPicks; i++) {
+                g.winners[i] = randomness[i].mod(maxPick).add(1);
             }
 
             Jackpots jackpots = Jackpots(jackpotAddress);

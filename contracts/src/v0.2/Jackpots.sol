@@ -31,6 +31,10 @@ contract Jackpots {
         return balance[msg.sender];
     }
 
+    function getBalanceOf(address jackpotOwner) public view returns(uint256){
+        return balance[jackpotOwner];
+    }
+
     function getJackpotMachines() public view returns(address[] memory) {
         return jackpotMachines;
     }
