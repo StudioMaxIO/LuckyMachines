@@ -12,8 +12,8 @@
     "node": "^15.x"
   },
   "dependencies": {
-    "@luckymachines/contracts": "^0.1.9",
-    "@react-spring/web": "^9.0.0",
+    "@luckymachines/contracts": "^0.1.10",
+    "@react-spring/web": "^9.1.0",
     "dotenv": "^8.2.0",
     "fs-extra": "^9.0.1",
     "ganache-cli": "^6.12.1",

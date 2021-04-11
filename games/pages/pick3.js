@@ -56,9 +56,6 @@ class Pick3 extends Component {
     const jackpot = await jackpots.methods
       .getBalanceOf(s.PICK_3_MACHINE)
       .call();
-    console.log("Jackpot:", jackpot);
-    // 0=entryFee, 1=payoutTiers, 2=payouts,
-    // 3=maxPick, 4=totalPicks, 5=currentJackpot, 6=jackpotContribution
     let payoutsString = "";
     for (let i = 0; i < summary[2].length; i++) {
       const pluralMatch = summary[1][i] > 1 ? " Matches: " : " Match: ";
@@ -369,7 +366,7 @@ class Pick3 extends Component {
             <Grid.Column>
               <center>
                 <p>
-                  <strong>Jackpot:</strong>
+                  <strong>Jackpot (3 Matches):</strong>
                   <br />{" "}
                   {this.props.jackpot > 0
                     ? web3.utils.fromWei(String(this.props.jackpot), "ether")
@@ -567,7 +564,8 @@ class Pick3 extends Component {
                   <strong>Payout:</strong>
                   {this.state.summaryWinners.toString() == "0,0,0"
                     ? " Pending..."
-                    : web3.utils.fromWei(this.state.summaryPayout, "ether") +
+                    : " " +
+                      web3.utils.fromWei(this.state.summaryPayout, "ether") +
                       " MATIC"}
                 </p>
                 <p>

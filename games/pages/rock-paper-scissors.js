@@ -26,6 +26,7 @@ class RockPaperScissors extends Component {
       bet: "",
       loading: false,
       animating: false,
+      displayInitialBG: true,
       displayWinnerRock: false,
       displayWinnerPaper: false,
       displayWinnerScissors: false,
@@ -87,7 +88,10 @@ class RockPaperScissors extends Component {
 
   async loadGame() {
     console.log("Loading game...");
-    this.setState({ checkGameLoading: true, errorMessage: "" });
+    this.setState({
+      checkGameLoading: true,
+      errorMessage: "",
+    });
     // load game summary from id
     try {
       //if data loaded, set state
@@ -108,6 +112,7 @@ class RockPaperScissors extends Component {
       });
       if (gameSummary.winner != "0") {
         this.setState({
+          displayInitialBG: false,
           animating: false,
           buttonsDisabled: false,
           displayWinnerRock: gameSummary.winner == "1",
@@ -116,7 +121,12 @@ class RockPaperScissors extends Component {
           displayGameInfo: true,
         });
       } else {
-        this.setState({ animating: true, buttonsDisabled: true });
+        this.setState({
+          animating: true,
+          buttonsDisabled: true,
+          displayInitialBG: false,
+        });
+
         setTimeout(location.reload.bind(location), 10000);
       }
     } catch (err) {
@@ -141,9 +151,13 @@ class RockPaperScissors extends Component {
         summaryPlayed: gameSummary.played,
         checkGameErrorMessage: "",
       });
-      if (gameSummary.winner == "0") {
+      if (gameSummary.winner === "0") {
         //set timer to recheck
-        this.setState({ animating: true, buttonsDisabled: true });
+        this.setState({
+          animating: true,
+          buttonsDisabled: true,
+          displayInitialBG: false,
+        });
         setTimeout(this.reloadGame, 10000);
       } else {
         // display winning value
@@ -173,6 +187,22 @@ class RockPaperScissors extends Component {
     this.setState({ checkGameLoading: false, errorMessage: "" });
   };
 
+  reloadWhenGameFinished = async () => {
+    const accounts = await web3.eth.getAccounts();
+    const luckyMachine = await LuckyMachine(s.ROCK_PAPER_SCISSORS_MACHINE);
+    const gameID = await luckyMachine.methods
+      .lastGameCreated(accounts[0])
+      .call();
+    const gameSummary = await luckyMachine.methods.games(gameID).call();
+
+    if (gameSummary.winner === "0") {
+      setTimeout(await this.reloadWhenGameFinished(), 5000);
+    } else {
+      const gameURL = "/rock-paper-scissors/g/" + gameID;
+      window.location.assign(gameURL);
+    }
+  };
+
   placeBet = async () => {
     this.setState({ loading: true, errorMessage: "" });
     const weiBet = web3.utils.toWei(this.state.bet, "ether");
@@ -199,26 +229,30 @@ class RockPaperScissors extends Component {
                 from: accounts[0],
                 value: web3.utils.toWei(this.state.bet, "ether"),
               });
-            const gameID = await luckyMachine.methods
-              .lastGameCreated(accounts[0])
-              .call();
-            const gameURL = "/rock-paper-scissors/g/" + gameID;
-            setTimeout(function () {
-              window.location.assign(gameURL);
-            }, 20000);
           } catch (err) {
-            this.setState({ errorMessage: err.message });
+            this.setState({
+              errorMessage: err.message,
+              animating: false,
+              displayInitialBG: true,
+              buttonsDisabled: false,
+            });
           }
         } else {
           this.setState({
             errorMessage:
               "Machine does not have enough LINK to request random number.",
+            animating: false,
+            displayInitialBG: true,
+            buttonsDisabled: false,
           });
         }
       } else {
         this.setState({
           errorMessage:
             "Machine unable to pay out winnings. Try again later or try another machine.",
+          animating: false,
+          displayInitialBG: true,
+          buttonsDisabled: false,
         });
       }
     } else {
@@ -230,9 +264,13 @@ class RockPaperScissors extends Component {
         " MATIC";
       this.setState({
         errorMessage: rangeError,
+        animating: false,
+        displayInitialBG: true,
+        buttonsDisabled: false,
       });
     }
     this.setState({ loading: false });
+    this.reloadWhenGameFinished();
   };
 
   rockPressed() {
@@ -246,6 +284,7 @@ class RockPaperScissors extends Component {
       displayWinnerPaper: false,
       displayWinnerScissors: false,
       displayGameInfo: false,
+      displayInitialBG: false,
     });
     this.placeBet();
   }
@@ -261,6 +300,7 @@ class RockPaperScissors extends Component {
       displayWinnerPaper: false,
       displayWinnerScissors: false,
       displayGameInfo: false,
+      displayInitialBG: false,
     });
     this.placeBet();
   }
@@ -276,6 +316,7 @@ class RockPaperScissors extends Component {
       displayWinnerPaper: false,
       displayWinnerScissors: false,
       displayGameInfo: false,
+      displayInitialBG: false,
     });
     this.placeBet();
   }
@@ -305,6 +346,15 @@ class RockPaperScissors extends Component {
                 width: "75%",
               }}
             >
+              <div
+                style={{
+                  display: this.state.displayInitialBG ? "inline" : "none",
+                }}
+              >
+                <center>
+                  <p style={{ fontSize: "100px" }}>👊 ✋✌️</p>
+                </center>
+              </div>
               <div
                 style={{
                   display: this.state.displayWinnerRock ? "inline" : "none",

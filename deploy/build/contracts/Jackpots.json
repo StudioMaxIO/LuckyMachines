@@ -18,8 +18,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -38,8 +37,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -58,13 +56,11 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "stateMutability": "payable",
-      "type": "receive",
-      "payable": true
+      "type": "receive"
     },
     {
       "inputs": [],
@@ -91,8 +87,7 @@
       "name": "addToJackpot",
       "outputs": [],
       "stateMutability": "payable",
-      "type": "function",
-      "payable": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -105,8 +100,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -125,8 +119,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -139,8 +132,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -192,7 +184,7 @@
         "id": 474,
         "nodeType": "ImportDirective",
         "scope": 640,
-        "sourceUnit": 3467,
+        "sourceUnit": 3487,
         "src": "25:29:8",
         "symbolAliases": [],
         "unitAlias": ""
@@ -2299,7 +2291,7 @@
       },
       {
         "attributes": {
-          "SourceUnit": 3467,
+          "SourceUnit": 3487,
           "absolutePath": "@luckymachines/contracts/src/v0.2/LuckyMachines.sol",
           "file": "./LuckyMachines.sol",
           "scope": 640,
@@ -4633,8 +4625,7 @@
     }
   },
   "schemaVersion": "3.3.4",
-  "updatedAt": "2021-04-10T01:15:00.483Z",
-  "networkType": "ethereum",
+  "updatedAt": "2021-04-10T03:43:13.448Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
