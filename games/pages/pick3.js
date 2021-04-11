@@ -42,6 +42,7 @@ class Pick3 extends Component {
     requestRefundLoading: false,
     summaryGameRefunded: false,
     currentJackpot: "",
+    outOfOrder: true,
   };
 
   static async getInitialProps(props) {
@@ -91,14 +92,23 @@ class Pick3 extends Component {
 
   async componentDidMount() {
     this._isMounted = true;
+
     if (global.chainID == "0") {
       global.chainID = await web3.eth.getChainId();
     }
     if (global.chainID != s.REQUIRED_CHAIN_ID) {
       window.location.assign("/incorrect-chain");
     } else {
+      const m = LuckyMachineJackpot(s.PICK_3_MACHINE);
+      const betPayable = await m.methods.betPayable(1).call();
+      const canPayLINKFee = await m.methods
+        .canPayFee(s.LINK_FEE * 10 ** 18)
+        .call();
+      const active = betPayable && canPayLINKFee;
       this.setState({
         bet: web3.utils.fromWei(this.props.entryFee, "ether"),
+        currentJackpot: this.props.jackpot,
+        outOfOrder: !active,
       });
       if (this.props.gameID != "") {
         this.setState({ summaryGameID: this.props.gameID });
@@ -147,6 +157,14 @@ class Pick3 extends Component {
     }
     return <div>{final}</div>;
   }
+
+  updateJackpot = async (event) => {
+    const jackpots = await Jackpots(s.JACKPOTS);
+    const jackpot = await jackpots.methods
+      .getBalanceOf(s.PICK_3_MACHINE)
+      .call();
+    this.setState({ currentJackpot: jackpot });
+  };
 
   selectNumber1 = (e, { name }) => {
     this.setState({ pick1: name });
@@ -233,6 +251,11 @@ class Pick3 extends Component {
         .call();
       console.log("Winning Numbers: ", winningNumbers);
 
+      const jackpots = await Jackpots(s.JACKPOTS);
+      const jackpot = await jackpots.methods
+        .getBalanceOf(s.PICK_3_MACHINE)
+        .call();
+
       this.setState({
         summaryGameID: gameSummary.id,
         summaryPlayer: gameSummary.player,
@@ -242,7 +265,10 @@ class Pick3 extends Component {
         summaryPayout: gameSummary.payout,
         summaryPlayed: gameSummary.played,
         checkGameErrorMessage: "",
+        currentJackpot: jackpot,
       });
+
+      this.setState({});
     } catch (err) {
       this.setState({ checkGameErrorMessage: err.message });
     }
@@ -266,6 +292,10 @@ class Pick3 extends Component {
       const winningNumbers = await luckyMachineJackpot.methods
         .getWinningNumbers(gameSummary.id)
         .call();
+      const jackpots = await Jackpots(s.JACKPOTS);
+      const jackpot = await jackpots.methods
+        .getBalanceOf(s.PICK_3_MACHINE)
+        .call();
       this.setState({
         summaryGameID: gameSummary.id,
         summaryPlayer: gameSummary.player,
@@ -274,6 +304,7 @@ class Pick3 extends Component {
         summaryWinners: winningNumbers,
         summaryPayout: gameSummary.payout,
         summaryPlayed: gameSummary.played,
+        currentJackpot: jackpot,
       });
       if (!gameSummary.played) {
         //set timer to recheck
@@ -342,6 +373,13 @@ class Pick3 extends Component {
               (Rolling Jackpot)
             </h2>
           </Grid.Row>
+          <Grid.Row color="black" style={{ marginTop: "-35px" }}>
+            <Icon
+              style={{ marginBottom: "5px" }}
+              color={this.state.outOfOrder ? "red" : "green"}
+              name="circle"
+            />
+          </Grid.Row>
           <Grid.Row
             columns={"3"}
             style={{ backgroundColor: "#AAD9FF", marginTop: "-10px" }}
@@ -369,9 +407,15 @@ class Pick3 extends Component {
                   <strong>Jackpot (3 Matches):</strong>
                   <br />{" "}
                   {this.props.jackpot > 0
-                    ? web3.utils.fromWei(String(this.props.jackpot), "ether")
+                    ? web3.utils.fromWei(
+                        String(this.state.currentJackpot),
+                        "ether"
+                      )
                     : "0"}{" "}
-                  MATIC
+                  MATIC{" "}
+                  <a href="#">
+                    <Icon name="redo" onClick={this.updateJackpot} />
+                  </a>
                 </p>
               </center>
             </Grid.Column>
@@ -461,6 +505,7 @@ class Pick3 extends Component {
             <Form onSubmit={this.placeBet} error={!!this.state.errorMessage}>
               <Message error header="Oops!" content={this.state.errorMessage} />
               <Button
+                disabled={this.state.outOfOrder ? true : false}
                 loading={this.state.loading}
                 style={{
                   backgroundColor: "#00D792",
@@ -469,7 +514,7 @@ class Pick3 extends Component {
                 }}
                 size="huge"
               >
-                Play
+                {this.state.outOfOrder ? "Out of Order" : "Play"}
               </Button>
             </Form>
           </Grid.Row>

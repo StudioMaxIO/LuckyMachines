@@ -9,6 +9,7 @@ import {
   Input,
   Message,
   Label,
+  Icon,
 } from "semantic-ui-react";
 import Layout from "../components/Layout";
 import { Link, Router } from "../routes";
@@ -26,7 +27,7 @@ class RockPaperScissors extends Component {
       bet: "",
       loading: false,
       animating: false,
-      displayInitialBG: true,
+      displayInitialBG: false,
       displayWinnerRock: false,
       displayWinnerPaper: false,
       displayWinnerScissors: false,
@@ -43,6 +44,7 @@ class RockPaperScissors extends Component {
       summaryWinningNumber: "",
       summaryPlayed: false,
       summaryGameRefunded: false,
+      outOfOrder: true,
     };
     this.rockPressed = this.rockPressed.bind(this);
     this.paperPressed = this.paperPressed.bind(this);
@@ -73,11 +75,22 @@ class RockPaperScissors extends Component {
     if (global.chainID != s.REQUIRED_CHAIN_ID) {
       window.location.assign("/incorrect-chain");
     } else {
+      const m = LuckyMachine(s.ROCK_PAPER_SCISSORS_MACHINE);
+      const betPayable = await m.methods
+        .betPayable(this.props.maximumBet)
+        .call();
+      const canPayLINKFee = await m.methods
+        .canPayFee(s.LINK_FEE * 10 ** 18)
+        .call();
+      const active = betPayable && canPayLINKFee;
       this.setState({
         bet: web3.utils.fromWei(this.props.minimumBet, "ether"),
+        outOfOrder: !active,
       });
       if (this.props.gameID != "") {
         this.loadGame();
+      } else {
+        this.setState({ displayInitialBG: true });
       }
     }
   }
@@ -127,12 +140,18 @@ class RockPaperScissors extends Component {
           displayInitialBG: false,
         });
 
-        setTimeout(location.reload.bind(location), 10000);
+        //setTimeout(location.reload.bind(location), 10000);
       }
     } catch (err) {
-      this.setState({ checkGameErrorMessage: err.message });
+      this.setState({
+        checkGameErrorMessage: err.message,
+        displayInitialBG: true,
+      });
     }
-    this.setState({ checkGameLoading: false, errorMessage: "" });
+    this.setState({
+      checkGameLoading: false,
+      errorMessage: "",
+    });
   }
 
   reloadGame = async () => {
@@ -158,13 +177,14 @@ class RockPaperScissors extends Component {
           buttonsDisabled: true,
           displayInitialBG: false,
         });
-        setTimeout(this.reloadGame, 10000);
+        //setTimeout(this.reloadGame, 10000);
       } else {
         // display winning value
         this.setState({
           animating: false,
           buttonsDisabled: false,
           displayGameInfo: true,
+          displayInitialBG: false,
           displayWinnerRock: gameSummary.winner == "1",
           displayWinnerPaper: gameSummary.winner == "2",
           displayWinnerScissors: gameSummary.winner == "3",
@@ -229,6 +249,7 @@ class RockPaperScissors extends Component {
                 from: accounts[0],
                 value: web3.utils.toWei(this.state.bet, "ether"),
               });
+            this.reloadWhenGameFinished();
           } catch (err) {
             this.setState({
               errorMessage: err.message,
@@ -270,7 +291,6 @@ class RockPaperScissors extends Component {
       });
     }
     this.setState({ loading: false });
-    this.reloadWhenGameFinished();
   };
 
   rockPressed() {
@@ -330,6 +350,7 @@ class RockPaperScissors extends Component {
           <Grid.Row color="black">
             <h1
               style={{
+                zIndex: "2000",
                 textColor: "white",
                 fontSize: "4em",
                 fontWeight: "normal",
@@ -337,6 +358,13 @@ class RockPaperScissors extends Component {
             >
               Rock, Paper, Scissors!
             </h1>
+          </Grid.Row>
+          <Grid.Row color="black" style={{ marginTop: "-25px", zIndex: "500" }}>
+            <Icon
+              style={{ marginBottom: "5px" }}
+              color={this.state.outOfOrder ? "red" : "green"}
+              name="circle"
+            />
           </Grid.Row>
           <Grid.Row color="black">
             <div
@@ -457,7 +485,7 @@ class RockPaperScissors extends Component {
           </Grid.Row>
           <Grid.Row color="black" style={{ marginTop: "-20px" }}>
             <Button
-              disabled={this.state.buttonsDisabled}
+              disabled={this.state.buttonsDisabled || this.state.outOfOrder}
               color="blue"
               size="huge"
               onClick={this.rockPressed}
@@ -465,7 +493,7 @@ class RockPaperScissors extends Component {
               👊
             </Button>
             <Button
-              disabled={this.state.buttonsDisabled}
+              disabled={this.state.buttonsDisabled || this.state.outOfOrder}
               color="blue"
               size="huge"
               onClick={this.paperPressed}
@@ -473,7 +501,7 @@ class RockPaperScissors extends Component {
               ✋
             </Button>
             <Button
-              disabled={this.state.buttonsDisabled}
+              disabled={this.state.buttonsDisabled || this.state.outOfOrder}
               color="blue"
               size="huge"
               onClick={this.scissorsPressed}
@@ -487,16 +515,31 @@ class RockPaperScissors extends Component {
                 display: this.state.displayGameInfo ? "inline" : "none",
               }}
             >
-              Your Pick: {playerSymbols[this.state.summaryPick]}
-              <br />{" "}
-              {this.state.summaryPick == this.state.summaryWinningNumber
-                ? "Winner!"
-                : "Not a winner"}
-              <br />({playerSymbols[this.state.summaryPick]}{" "}
-              {this.state.summaryPick == this.state.summaryWinningNumber
-                ? " beats "
-                : " does not beat "}{" "}
-              {cpuSymbols[this.state.summaryWinningNumber]})
+              <h2>
+                {this.state.summaryPick == this.state.summaryWinningNumber
+                  ? "Winner!"
+                  : "Not a winner"}
+              </h2>
+              <h3
+                style={{
+                  marginTop: "-10px",
+                  display:
+                    this.state.summaryPick == this.state.summaryWinningNumber
+                      ? "block"
+                      : "none",
+                }}
+              >
+                Payout: {web3.utils.fromWei(this.state.summaryBet, "ether")}{" "}
+                MATIC{" "}
+              </h3>
+              <p style={{ marginTop: "-10px", fontSize: "15px" }}>
+                Hand Played: {playerSymbols[this.state.summaryPick]}
+                <br /> ({playerSymbols[this.state.summaryPick]}{" "}
+                {this.state.summaryPick == this.state.summaryWinningNumber
+                  ? " beats "
+                  : " does not beat "}{" "}
+                {cpuSymbols[this.state.summaryWinningNumber]})
+              </p>
             </div>
           </Grid.Row>
         </Grid>

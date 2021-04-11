@@ -34,7 +34,7 @@ class Footer extends Component {
               <List.Item>
                 <span>
                   <Icon name="github" />
-                  <a href="https://github.com/StudioMaxIO/LuckyMachinesPolygon">
+                  <a href="https://github.com/StudioMaxIO/LuckyMachines">
                     Github
                   </a>
                 </span>
