@@ -21,7 +21,7 @@ class Footer extends Component {
               <List.Item>
                 <span>
                   <Icon name="twitter" />
-                  <a href="https://twitter.com/studiomaxio">Twitter</a>
+                  <a href="https://twitter.com/luckymachinesio">Twitter</a>
                 </span>
               </List.Item>
             </List>
