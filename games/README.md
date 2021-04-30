@@ -3,10 +3,9 @@
 A library of games built on top of Lucky Machine contracts.
 
 Games Showcased:
-- [Rock Paper Scissors](https://luckymachines-games.herokuapp.com/rock-paper-scissors)
-- Pick 3 (coming soon)
-- Dragon's Treasure (coming soon)
+- [Rock Paper Scissors](https://games.luckymachines.io/rock-paper-scissors)
+- [Pick 3](https://games.luckymachines.io/pick3)
 
-Games can be previewed at https://luckymachines-games.herokuapp.com
+Games can be played  on Polygon / Matic at https://games.luckymachines.io
 
-Lucky Machine contracts can be played directly at https://luckymachines.io/play
+Original Lucky Machine contracts can be played directly at https://luckymachines.io/play
