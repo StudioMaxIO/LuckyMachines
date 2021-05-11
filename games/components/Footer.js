@@ -24,6 +24,12 @@ class Footer extends Component {
                   <a href="https://twitter.com/luckymachinesio">Twitter</a>
                 </span>
               </List.Item>
+              <List.Item>
+                <span>
+                  <Icon name="reddit alien" />
+                  <a href="https://www.reddit.com/r/LuckyMachines/">Reddit</a>
+                </span>
+              </List.Item>
             </List>
           </Grid.Column>
           <Grid.Column width={3}>
