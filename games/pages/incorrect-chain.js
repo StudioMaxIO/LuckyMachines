@@ -8,9 +8,9 @@ const s = require("../settings");
 class IncorrectChain extends Component {
   async componentDidMount() {
     this._isMounted = true;
-    const cid = await web3.eth.getChainId();;
+    const cid = await web3.eth.getChainId();
     if (cid == s.REQUIRED_CHAIN_ID) {
-      window.location.assign("/play");
+      window.location.assign("/");
     }
   }
 
@@ -29,7 +29,7 @@ class IncorrectChain extends Component {
                   style={{
                     textColor: "white",
                     fontSize: "4em",
-                    fontWeight: "normal"
+                    fontWeight: "normal",
                   }}
                 >
                   Lucky Machines
@@ -41,7 +41,7 @@ class IncorrectChain extends Component {
             style={{
               marginTop: "0px",
               backgroundColor: "#99ccff",
-              color: "#001433"
+              color: "#001433",
             }}
           >
             <Grid.Column>
