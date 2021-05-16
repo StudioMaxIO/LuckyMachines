@@ -46,8 +46,8 @@ module.exports = async (deployer, network, [defaultAccount]) => {
           LuckyMachineCoordinator,
           process.env.VRF_COORDINATOR_MUMBAI,
           mumbaiLINK,
-          process.env.KEY_HASH_KOVAN,
-          process.env.FEE_KOVAN
+          process.env.KEY_HASH_MUMBAI,
+          process.env.FEE_MUMBAI
         );
       } else if (network.startsWith("matic")) {
         await deployer.deploy(
