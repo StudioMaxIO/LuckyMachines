@@ -18,7 +18,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -90,7 +91,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -103,7 +105,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     }
   ],
   "metadata": "{\"compiler\":{\"version\":\"0.6.12+commit.27d51765\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address payable\",\"name\":\"jackpotAddress\",\"type\":\"address\"},{\"internalType\":\"address payable\",\"name\":\"machineCoordinator\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"linkToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"entryFee\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxPick\",\"type\":\"uint256\"},{\"internalType\":\"uint8\",\"name\":\"totalPicks\",\"type\":\"uint8\"},{\"internalType\":\"uint8[]\",\"name\":\"winningMatchQuantities\",\"type\":\"uint8[]\"},{\"internalType\":\"uint256[]\",\"name\":\"winningMatchPayouts\",\"type\":\"uint256[]\"},{\"internalType\":\"uint8\",\"name\":\"jackpotContribution\",\"type\":\"uint8\"}],\"name\":\"createMachine\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getMachines\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getOwnedMachines\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"machines\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"createMachine(address,address,address,uint256,uint256,uint8,uint8[],uint256[],uint8)\":{\"details\":\"Used to create a LuckyMachine that can be verified and included in the factory list.\"},\"getMachines()\":{\"details\":\"Returns a list of all machines created from this factory. Useful to verify a machine was setup appropriately and is a \\\"legitimate\\\" LuckyMachine.\"},\"getOwnedMachines()\":{\"details\":\"Returns a list of all machines created by the sender.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"@luckymachines/contracts/src/v0.2/LuckyMachines+Jackpot.sol\":\"LuckyMachineJackpotFactory\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"@chainlink/contracts/src/v0.6/VRFConsumerBase.sol\":{\"keccak256\":\"0xbb84a6411e071d5b04b36d7dda59eaf1cb5a28b3b289757a5ac849ddf9befac3\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://6bc702d1ec269920a3f0cf371155b6c4800d36233949873144e95ce3c4427eb3\",\"dweb:/ipfs/QmUrYPpfh7TAcUBx3B5ugW2jCAeWThMssY5oyRgQXQRkbE\"]},\"@chainlink/contracts/src/v0.6/VRFRequestIDBase.sol\":{\"keccak256\":\"0x0c3bd40c63dac8398a979b1228c8ecb1c269c157dd16f2dce2086d2270b65b22\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://ed9db87be9dfb0f763a556d8d80356b08282b8ea48484838cdf470a5c3cd15d5\",\"dweb:/ipfs/QmPLhwDAS3TPDiEQmTyqXnWBqwEMBSbXtjEiQDSGejoiPt\"]},\"@chainlink/contracts/src/v0.6/interfaces/LinkTokenInterface.sol\":{\"keccak256\":\"0xe245a7be950c94d87bb775ae9ee9fbd693fbe2987778e6ce0b04605ea44b7b68\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://bd2c3165d949fc66fe407b96eb3dc2092c7e800f4c073b411bf7b96de3e156c9\",\"dweb:/ipfs/QmcfJhR1Np4GsLWnww2Duqks2wEzYk8VDTvCAYy7MisG1r\"]},\"@chainlink/contracts/src/v0.6/vendor/SafeMathChainlink.sol\":{\"keccak256\":\"0x105f5e9491f3d0bbdd4f1c7627eb839d69b944bfd803028a01cc083597692c1f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://ec45a2748a024a947a921183d4102d5e206808588501d85ddc4f5668a009bc73\",\"dweb:/ipfs/QmRNAMpq7LdWFnJ7wWKGbUuAcURaGSS42PMxtQ4vjrHmp9\"]},\"@luckymachines/contracts/src/v0.2/Jackpots.sol\":{\"keccak256\":\"0x88cc71ad7e454df66b15cb0b0c25caefa36da23c2555fcf49482c649aaff1c74\",\"urls\":[\"bzz-raw://c8cbee03445a2db21359feee1ab664100d05ca0e0f3e334955d2626943638ac2\",\"dweb:/ipfs/QmaPDmdPknB1ZNs3p3gqHkxWNCr9kiYoNJ32BaVYr15A7X\"]},\"@luckymachines/contracts/src/v0.2/LuckyMachineCoordinator.sol\":{\"keccak256\":\"0xa212a6e1a28b4f2417c07c320fae16b609483d7db24e24f82ab71ce6ebbf7aea\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c4f643e57c3aa40617045053454faa056d5bb68db6be0dec5b697f59a43bead8\",\"dweb:/ipfs/QmTLZeYtZs3dkdtnM9WrXNMBt6GB1oRVQJVtseLWvFidHS\"]},\"@luckymachines/contracts/src/v0.2/LuckyMachines+Jackpot.sol\":{\"keccak256\":\"0xf8c86d27cc34d049b29dd4d6ac2317a49588481dbb0c4f2da176d56775593e95\",\"urls\":[\"bzz-raw://2d8d0c68bb6d540fe94174b0773a6438a50f7e8be54adc05bed77119224cfc55\",\"dweb:/ipfs/QmXkJHqHui183JS499rbCNJmNMPHnSM4wDWYXWCkrSFQ4K\"]},\"@luckymachines/contracts/src/v0.2/LuckyMachines.sol\":{\"keccak256\":\"0x29463e65b7839f79c44581471e9b930c9c5f7438a4b1d8f6a86002e3f3364d8c\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://5b7d732f4bd2203789e9f6c5002adb3fd54076ab81055f8a510e5da7febea36a\",\"dweb:/ipfs/QmYdghyjBkjK6gkQYQAhqJHppVSgZwUAUcHjNiwEZZ3AnY\"]},\"@openzeppelin/contracts/access/Ownable.sol\":{\"keccak256\":\"0x15e2d5bd4c28a88548074c54d220e8086f638a71ed07e6b3ba5a70066fcf458d\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://90faf5851c02f9bd42c5bfb54d4f0421a2612f50ab80b2c4fa24fa3792071cc2\",\"dweb:/ipfs/QmRGM4F2PcGVF85aTfaA9YBhCHHDqrMhRjyp6fGeBTtirb\"]},\"@openzeppelin/contracts/utils/Context.sol\":{\"keccak256\":\"0x8d3cb350f04ff49cfb10aef08d87f19dcbaecc8027b0bed12f3275cd12f38cf0\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://ded47ec7c96750f9bd04bbbc84f659992d4ba901cb7b532a52cd468272cf378f\",\"dweb:/ipfs/QmfBrGtQP7rZEqEg6Wz6jh2N2Kukpj1z5v3CGWmAqrzm96\"]}},\"version\":1}",
@@ -35759,9 +35762,17 @@
     "name": "solc",
     "version": "0.6.12+commit.27d51765.Emscripten.clang"
   },
-  "networks": {},
+  "networks": {
+    "80001": {
+      "events": {},
+      "links": {},
+      "address": "0xeD1916Ac3825B3BA20766072282b12bCc58fD170",
+      "transactionHash": "0x63a0ac700fd29bcbfd8046d69d85254db03cf04f650671556edf6a5c9a50107d"
+    }
+  },
   "schemaVersion": "3.3.4",
-  "updatedAt": "2021-04-10T03:43:13.480Z",
+  "updatedAt": "2021-05-16T01:35:50.088Z",
+  "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
     "methods": {
