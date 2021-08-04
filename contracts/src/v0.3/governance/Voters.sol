@@ -29,8 +29,14 @@ contract Voters {
         v.allocatedVotes[1] = tokensHeld; //Maintenance Votes
         v.allocatedVotes[2] = tokensHeld; //POC Votes
         v.allocatedVotes[3] = tokensHeld; //Continuing Votes
-        
-        
+        v.delegate[0] = voterAddress;
+        v.delegate[1] = voterAddress;
+        v.delegate[2] = voterAddress;
+        v.delegate[3] = voterAddress;
+    }
+    
+    function getVoter(address voterAddress) external view returns(Voter memory){
+        return voter[msg.sender][voterAddress];
     }
     
     /**
@@ -45,6 +51,10 @@ contract Voters {
     }
     
     function delegateLMIPVote(address to, address ballot) public {
+        
+        // TODO: ensure vote has not ben cast by delegator
+        // TODO: make sure voting deadline has not passed
+        
         Voter storage sender = voter[ballot][msg.sender];
         require(!sender.voted[0], "You already voted.");
         require(to != msg.sender, "Self-delegation is disallowed.");
@@ -58,14 +68,8 @@ contract Voters {
         sender.delegate[0] = to;
         Voter storage delegate_ = voter[ballot][to];
         if (delegate_.voted[0]) {
-            //
-            //TODO:
-            //
-            // If the delegate already voted,
-            // directly add to the number of votes
+            // 
         } else {
-            // If the delegate did not vote yet,
-            // add to her weight.
             delegate_.allocatedVotes[0] += sender.allocatedVotes[0];
         }
         sender.allocatedVotes[0] = 0;
@@ -143,15 +147,34 @@ contract Voters {
         sender.allocatedVotes[3] = 0;
     }
     
-    function submitVotes(address ballot, 
+    //Called from ballot
+    function submitVotes(address voterAddress,
                          uint[] memory lmipVotes, 
                          uint[] memory maintenanceVotes,
                          uint[] memory pocVotes,
-                         uint[] memory continuingVotes) public {
-        //
-        // should come directly from voter
-        // check if voter already voted
-        // lock in votes
+                         uint[] memory continuingVotes) external {
+        
+        Voter storage v = voter[msg.sender][voterAddress];
+        require(v.voted[0] == false || v.voted[1] == false || v.voted[2] == false || v.voted[3] == false, "votes already cast.");
+        if (v.voted[0] == false) {
+            v.lmipVotes = lmipVotes;
+            v.voted[0] = true;
+        }
+        
+        if (v.voted[1] == false) {
+            v.maintenanceVotes = maintenanceVotes;
+            v.voted[1] = true;
+        }
+        
+        if (v.voted[2] == false) {
+            v.pocVotes = pocVotes;
+            v.voted[2] = true;
+        }
+        
+        if (v.voted[3] == false) {
+            v.continuingVotes = continuingVotes;
+            v.voted[3] = true;
+        }
     }
 
 }

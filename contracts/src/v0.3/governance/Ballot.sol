@@ -33,6 +33,11 @@ contract Ballot {
     uint public votingStart;
     uint public votingEnd;
     
+    mapping(uint=>uint) public lmipVotesCast; //lmipVotes[proposal id] shows total votes for proposal
+    mapping(uint=>uint) public maintenanceVotesCast;
+    mapping(uint=>uint) public pocVotesCast;
+    mapping(uint=>uint) public continuingVotesCast;
+    
     mapping(Proposals.ProposalType => uint) public totalVotes;
     
     TokenInterface internal VotingToken;
@@ -106,28 +111,15 @@ contract Ballot {
         
     }
     
-    /*
+    
     function submitVotes(uint[] memory lmipVotes, 
                          uint[] memory maintenanceVotes,
                          uint[] memory pocVotes,
                          uint[] memory continuingVotes) public {
-        Voter memory sender = voters[msg.sender];
-        if(sender.allocatedVotes[0] != 0){
-            voteLMIP(lmipVotes);
-        }
-        
-        if(sender.allocatedVotes[1] != 0){
-            voteMaintenance(maintenanceVotes);
-        }
-        
-        if(sender.allocatedVotes[2] != 0){
-            votePOC(pocVotes);
-        }
-        
-        if(sender.allocatedVotes[3] != 0){
-            voteContinuing(continuingVotes);
-        }
+        Voters v = Voters(voters);
+        v.submitVotes(msg.sender, lmipVotes, maintenanceVotes, pocVotes, continuingVotes);
     }
+    /* 
     
     function voteLMIP(uint[] memory lmipVotes) public {
         Voter storage sender = voters[msg.sender];
@@ -182,3 +174,12 @@ contract Ballot {
     }
 */
 }
+
+
+
+
+
+
+
+
+
