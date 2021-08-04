@@ -26,10 +26,50 @@ contract Ballot {
     address public proposals;
     address public voters;
     
+    address public manager;
+    
+    string public title;
+    
+    uint public votingStart;
+    uint public votingEnd;
+    
+    mapping(Proposals.ProposalType => uint) public totalVotes;
+    
     TokenInterface internal VotingToken;
+    
+    modifier beforeVote() {
+        require(block.timestamp < votingStart);
+        _;
+    }
+    
+    modifier afterVote() {
+        require(block.timestamp > votingEnd);
+        _;
+    }
 
-    constructor(address votingTokenAddress) {
+    modifier managerOnly() {
+        require(msg.sender == manager, "Caller is not manager");
+        _;
+    }
+    
+    constructor(string memory ballotTitle, address votingTokenAddress, address ballotManager, uint voteStart, uint voteEnd, uint defaultVotes) {
         VotingToken = TokenInterface(votingTokenAddress);
+        title = ballotTitle;
+        manager = ballotManager;
+        votingStart = voteStart;
+        votingEnd = voteEnd;
+        totalVotes[Proposals.ProposalType.LMIP] = defaultVotes;
+        totalVotes[Proposals.ProposalType.Maintenance] = defaultVotes;
+        totalVotes[Proposals.ProposalType.POC] = defaultVotes;
+        totalVotes[Proposals.ProposalType.Continuing] = defaultVotes;
+    }
+    
+    function changeManager(address newManager) public managerOnly {
+        manager = newManager;
+    }
+    
+    function setTotalVotes(uint numVotes, Proposals.ProposalType proposalType) public managerOnly beforeVote{
+        totalVotes[proposalType] = numVotes;
     }
     
     function getVotingTokenBalance() public view returns(uint){
@@ -131,3 +171,11 @@ contract Ballot {
     }
 */
 }
+
+// TODO
+// 
+// create factory to create ballot with start and
+// end after delay from now instead of  absolute
+// start and end time
+//
+//

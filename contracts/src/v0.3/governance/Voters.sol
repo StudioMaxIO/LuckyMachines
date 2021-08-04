@@ -8,8 +8,8 @@ contract Voters {
             uint lockedTokens;
             uint[4] allocatedVotes; // # votes allocated to voter, 0=LMIP, 1=Maintenance, 2=POC, 3=Continuing
             bool[4] voted;  // if true, that person already voted, 0=LMIP, 1=Maintenance, 2=POC, 3=Continuing
-            address[4] delegate; // person delegated to, 0=LMIP, 1=Maintenance, 2=POC, 3=Continuing
-            uint[] lmipVotes;   // indices of the selected proposals
+            address[4] delegate; // voter delegated to, 0=LMIP, 1=Maintenance, 2=POC, 3=Continuing
+            uint[] lmipVotes;   // indices of the selected proposals (in order of choice)
             uint[] maintenanceVotes;
             uint[] pocVotes; 
             uint[] continuingVotes;
@@ -18,13 +18,18 @@ contract Voters {
     
     // The Ballot will authorize the amount in the user's wallet at time of registration.
     // Ensure all funds to be used for voting are present in wallet before registering
-    function registerToVote(address voter) external {
+    
+    // Ballot will hold LUCK on behalf of voter until vote is complete
+    function registerToVote(address voter, uint tokensHeld) external {
         address ballotAddress = msg.sender;
         require(registered[ballotAddress][voter] == false, "Already registered");
         registered[ballotAddress][voter] = true;
         Voter storage v = voters[ballotAddress][voter];
         v.registrationDate = block.timestamp;
-        //TODO: set total votes to current balance or approval value, whichever is lower
+        v.allocatedVotes[0] = tokensHeld; //LMIP Votes
+        v.allocatedVotes[1] = tokensHeld; //Maintenance Votes
+        v.allocatedVotes[2] = tokensHeld; //POC Votes
+        v.allocatedVotes[3] = tokensHeld; //Continuing Votes
     }
     
     /**
@@ -142,6 +147,7 @@ contract Voters {
                          uint[] memory maintenanceVotes,
                          uint[] memory pocVotes,
                          uint[] memory continuingVotes) public {
+        //
         // should come directly from voter
         // check if voter already voted
         // lock in votes
