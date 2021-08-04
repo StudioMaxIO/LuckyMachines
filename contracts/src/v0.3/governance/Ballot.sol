@@ -89,10 +89,21 @@ contract Ballot {
         VotingToken.transferFrom(address(this), msg.sender, address(this).balance);
     }
     
-    function registerToVote(address ballotAddress) public {
+    function registerToVote() public {
+        
+        uint voterBalance = VotingToken.balanceOf(msg.sender);
+        uint allocatedTokens = VotingToken.allowance(msg.sender, address(this));
+        require(voterBalance > 0 && allocatedTokens > 0, "No authorized tokens");
+        uint votesAllowed = voterBalance < allocatedTokens ? voterBalance : allocatedTokens;
+        
+        // register with voters.sol
+        Voters(voters).registerToVote(msg.sender, votesAllowed);
+        
         //TODO: lock tokens in ballot
-        //TODO: register with voters.sol
+        VotingToken.transferFrom(msg.sender, address(this), votesAllowed);
+        
         //TODO: set total votes to current balance or approval value, whichever is lower
+        
     }
     
     /*
@@ -171,11 +182,3 @@ contract Ballot {
     }
 */
 }
-
-// TODO
-// 
-// create factory to create ballot with start and
-// end after delay from now instead of  absolute
-// start and end time
-//
-//

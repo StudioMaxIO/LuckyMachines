@@ -2,8 +2,8 @@
 pragma solidity >=0.6.0;
 
 contract Voters {
-    mapping(address => mapping(address => Voter)) public voters; //voters[ballot][voter]
-    mapping(address => mapping(address => bool)) public registered; //registered[ballot][voter]
+    mapping(address => mapping(address => Voter)) public voter; //voters[ballot][voterAddress]
+    //mapping(address => mapping(address => bool)) public registered; //registered[ballot][voter]
     struct Voter {
             uint lockedTokens;
             uint[4] allocatedVotes; // # votes allocated to voter, 0=LMIP, 1=Maintenance, 2=POC, 3=Continuing
@@ -20,16 +20,17 @@ contract Voters {
     // Ensure all funds to be used for voting are present in wallet before registering
     
     // Ballot will hold LUCK on behalf of voter until vote is complete
-    function registerToVote(address voter, uint tokensHeld) external {
+    function registerToVote(address voterAddress, uint tokensHeld) external {
         address ballotAddress = msg.sender;
-        require(registered[ballotAddress][voter] == false, "Already registered");
-        registered[ballotAddress][voter] = true;
-        Voter storage v = voters[ballotAddress][voter];
+        require(voter[ballotAddress][voterAddress].registrationDate > 0, "Already registered");
+        Voter storage v = voter[ballotAddress][voterAddress];
         v.registrationDate = block.timestamp;
         v.allocatedVotes[0] = tokensHeld; //LMIP Votes
         v.allocatedVotes[1] = tokensHeld; //Maintenance Votes
         v.allocatedVotes[2] = tokensHeld; //POC Votes
         v.allocatedVotes[3] = tokensHeld; //Continuing Votes
+        
+        
     }
     
     /**
@@ -44,18 +45,18 @@ contract Voters {
     }
     
     function delegateLMIPVote(address to, address ballot) public {
-        Voter storage sender = voters[ballot][msg.sender];
+        Voter storage sender = voter[ballot][msg.sender];
         require(!sender.voted[0], "You already voted.");
         require(to != msg.sender, "Self-delegation is disallowed.");
 
-        while (voters[ballot][to].delegate[0] != address(0)) {
-            to = voters[ballot][to].delegate[0];
+        while (voter[ballot][to].delegate[0] != address(0)) {
+            to = voter[ballot][to].delegate[0];
             // We found a loop in the delegation, not allowed.
             require(to != msg.sender, "Found loop in LMIP delegation.");
         }
         sender.voted[0] = true;
         sender.delegate[0] = to;
-        Voter storage delegate_ = voters[ballot][to];
+        Voter storage delegate_ = voter[ballot][to];
         if (delegate_.voted[0]) {
             //
             //TODO:
@@ -71,17 +72,17 @@ contract Voters {
     }
     
     function delegateMaintenanceVote(address to, address ballot) public {
-        Voter storage sender = voters[ballot][msg.sender];
+        Voter storage sender = voter[ballot][msg.sender];
         require(!sender.voted[1], "You already voted.");
         require(to != msg.sender, "Self-delegation is disallowed.");
 
-        while (voters[ballot][to].delegate[1] != address(0)) {
-            to = voters[ballot][to].delegate[1];
+        while (voter[ballot][to].delegate[1] != address(0)) {
+            to = voter[ballot][to].delegate[1];
             require(to != msg.sender, "Found loop in maintenance delegation.");
         }
         sender.voted[1] = true;
         sender.delegate[1] = to;
-        Voter storage delegate_ = voters[ballot][to];
+        Voter storage delegate_ = voter[ballot][to];
         if (delegate_.voted[1]) {
             //
             //TODO:
@@ -95,17 +96,17 @@ contract Voters {
     }
     
     function delegatePOCVote(address to, address ballot) public {
-        Voter storage sender = voters[ballot][msg.sender];
+        Voter storage sender = voter[ballot][msg.sender];
         require(!sender.voted[2], "You already voted.");
         require(to != msg.sender, "Self-delegation is disallowed.");
 
-        while (voters[ballot][to].delegate[2] != address(0)) {
-            to = voters[ballot][to].delegate[2];
+        while (voter[ballot][to].delegate[2] != address(0)) {
+            to = voter[ballot][to].delegate[2];
             require(to != msg.sender, "Found loop in POC delegation.");
         }
         sender.voted[2] = true;
         sender.delegate[2] = to;
-        Voter storage delegate_ = voters[ballot][to];
+        Voter storage delegate_ = voter[ballot][to];
         if (delegate_.voted[2]) {
             //
             //TODO:
@@ -119,17 +120,17 @@ contract Voters {
     }
     
     function delegateContinuingVote(address to, address ballot) public {
-        Voter storage sender = voters[ballot][msg.sender];
+        Voter storage sender = voter[ballot][msg.sender];
         require(!sender.voted[3], "You already voted.");
         require(to != msg.sender, "Self-delegation is disallowed.");
 
-        while (voters[ballot][to].delegate[3] != address(0)) {
-            to = voters[ballot][to].delegate[3];
+        while (voter[ballot][to].delegate[3] != address(0)) {
+            to = voter[ballot][to].delegate[3];
             require(to != msg.sender, "Found loop in POC delegation.");
         }
         sender.voted[3] = true;
         sender.delegate[3] = to;
-        Voter storage delegate_ = voters[ballot][to];
+        Voter storage delegate_ = voter[ballot][to];
         if (delegate_.voted[3]) {
             //
             //TODO:
