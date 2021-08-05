@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0;
 
+import "./Ballot.sol";
+
 contract Voters {
     mapping(address => mapping(address => Voter)) public voter; //voters[ballot][voterAddress]
     //mapping(address => mapping(address => bool)) public registered; //registered[ballot][voter]
@@ -51,8 +53,9 @@ contract Voters {
     }
     
     function delegateLMIPVote(address to, address ballot) public {
-        
-        // TODO: ensure vote has not ben cast by delegator
+        require(Ballot(ballot).votingEnd() > block.timestamp, "Can't delegate after vote ends");
+        Voter storage delegate = voter[ballot][to];
+        require(!delegate.voted[0], "Delegate already voted");
         // TODO: make sure voting deadline has not passed
         
         Voter storage sender = voter[ballot][msg.sender];
@@ -66,19 +69,19 @@ contract Voters {
         }
         sender.voted[0] = true;
         sender.delegate[0] = to;
-        Voter storage delegate_ = voter[ballot][to];
-        if (delegate_.voted[0]) {
-            // 
-        } else {
-            delegate_.allocatedVotes[0] += sender.allocatedVotes[0];
-        }
+        
+        delegate.allocatedVotes[0] += sender.allocatedVotes[0];
         sender.allocatedVotes[0] = 0;
     }
     
     function delegateMaintenanceVote(address to, address ballot) public {
+        require(Ballot(ballot).votingEnd() > block.timestamp, "Can't delegate after vote ends");
+        Voter storage delegate = voter[ballot][to];
+        require(!delegate.voted[1], "Delegate already voted");
+        
         Voter storage sender = voter[ballot][msg.sender];
         require(!sender.voted[1], "You already voted.");
-        require(to != msg.sender, "Self-delegation is disallowed.");
+        require(to != msg.sender, "No need to self-delegate");
 
         while (voter[ballot][to].delegate[1] != address(0)) {
             to = voter[ballot][to].delegate[1];
@@ -86,23 +89,19 @@ contract Voters {
         }
         sender.voted[1] = true;
         sender.delegate[1] = to;
-        Voter storage delegate_ = voter[ballot][to];
-        if (delegate_.voted[1]) {
-            //
-            //TODO:
-            //
-            // If the delegate already voted,
-            // directly add to the number of votes
-        } else {
-            delegate_.allocatedVotes[1] += sender.allocatedVotes[1];
-        }
+        
+        delegate.allocatedVotes[1] += sender.allocatedVotes[1];
         sender.allocatedVotes[1] = 0;
     }
     
     function delegatePOCVote(address to, address ballot) public {
+        require(Ballot(ballot).votingEnd() > block.timestamp, "Can't delegate after vote ends");
+        Voter storage delegate = voter[ballot][to];
+        require(!delegate.voted[2], "Delegate already voted");
+        
         Voter storage sender = voter[ballot][msg.sender];
         require(!sender.voted[2], "You already voted.");
-        require(to != msg.sender, "Self-delegation is disallowed.");
+        require(to != msg.sender, "No need to self-delegate");
 
         while (voter[ballot][to].delegate[2] != address(0)) {
             to = voter[ballot][to].delegate[2];
@@ -110,23 +109,19 @@ contract Voters {
         }
         sender.voted[2] = true;
         sender.delegate[2] = to;
-        Voter storage delegate_ = voter[ballot][to];
-        if (delegate_.voted[2]) {
-            //
-            //TODO:
-            //
-            // If the delegate already voted,
-            // directly add to the number of votes
-        } else {
-            delegate_.allocatedVotes[2] += sender.allocatedVotes[2];
-        }
+        
+        delegate.allocatedVotes[2] += sender.allocatedVotes[2];
         sender.allocatedVotes[2] = 0;
     }
     
     function delegateContinuingVote(address to, address ballot) public {
+        require(Ballot(ballot).votingEnd() > block.timestamp, "Can't delegate after vote ends");
+        Voter storage delegate = voter[ballot][to];
+        require(!delegate.voted[3], "Delegate already voted");
+        
         Voter storage sender = voter[ballot][msg.sender];
         require(!sender.voted[3], "You already voted.");
-        require(to != msg.sender, "Self-delegation is disallowed.");
+        require(to != msg.sender, "No need to self-delegate");
 
         while (voter[ballot][to].delegate[3] != address(0)) {
             to = voter[ballot][to].delegate[3];
@@ -134,16 +129,8 @@ contract Voters {
         }
         sender.voted[3] = true;
         sender.delegate[3] = to;
-        Voter storage delegate_ = voter[ballot][to];
-        if (delegate_.voted[3]) {
-            //
-            //TODO:
-            //
-            // If the delegate already voted,
-            // directly add to the number of votes
-        } else {
-            delegate_.allocatedVotes[3] += sender.allocatedVotes[3];
-        }
+        
+        delegate.allocatedVotes[3] += sender.allocatedVotes[3];
         sender.allocatedVotes[3] = 0;
     }
     
@@ -158,6 +145,7 @@ contract Voters {
         require(v.voted[0] == false || v.voted[1] == false || v.voted[2] == false || v.voted[3] == false, "votes already cast.");
         if (v.voted[0] == false) {
             v.lmipVotes = lmipVotes;
+            // calculate votes and call store on ballot
             v.voted[0] = true;
         }
         
@@ -175,6 +163,23 @@ contract Voters {
             v.continuingVotes = continuingVotes;
             v.voted[3] = true;
         }
+    }
+    
+    function calculateVotes(uint[] memory choices, uint totalVotes) internal pure returns(uint[2][] memory){
+        uint[2][] memory formattedVotes;
+        
+        uint voteUnits = 0;
+        uint voteSegments = 0;
+        for(uint i = choices.length; i > 0; i--){
+            voteSegments += i;
+        }
+        
+        for(uint i = choices.length - 1; i > 0; i--) {
+            voteUnits++;
+            uint availableVotes = totalVotes * (voteUnits / voteSegments);
+            formattedVotes[i] = [uint(choices[i]), uint(availableVotes)];
+        }
+        return formattedVotes;
     }
 
 }

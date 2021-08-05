@@ -131,7 +131,7 @@ contract Ballot {
                             uint[2][] memory maintenanceVotes, 
                             uint[2][] memory pocVotes, 
                             uint[2][] memory continuingVotes) external {
-                                
+        require(msg.sender == voters, "only callable from voters contract");                        
         for (uint i = 0; i < totalVotes[Proposals.ProposalType.LMIP]; i++) {
             if(lmipVotes[i][0] != 0) {
                 if(lmipVotesCast[lmipVotes[i][0]] == 0) {
