@@ -33,6 +33,11 @@ contract Ballot {
     uint public votingStart;
     uint public votingEnd;
     
+    uint[] public lmipProposalsVoted;
+    uint[] public maintenanceProposalsVoted;
+    uint[] public pocProposalsVoted;
+    uint[] public continuingProposalsVoted;
+    
     mapping(uint=>uint) public lmipVotesCast; //lmipVotes[proposal id] shows total votes for proposal
     mapping(uint=>uint) public maintenanceVotesCast;
     mapping(uint=>uint) public pocVotesCast;
@@ -111,7 +116,8 @@ contract Ballot {
         
     }
     
-    
+    // .                                1.          2.              3.      
+    // votes in order of selection: [proposal 2(id), proposal 4(id), another proposal(id)]
     function submitVotes(uint[] memory lmipVotes, 
                          uint[] memory maintenanceVotes,
                          uint[] memory pocVotes,
@@ -119,67 +125,47 @@ contract Ballot {
         Voters v = Voters(voters);
         v.submitVotes(msg.sender, lmipVotes, maintenanceVotes, pocVotes, continuingVotes);
     }
-    /* 
     
-    function voteLMIP(uint[] memory lmipVotes) public {
-        Voter storage sender = voters[msg.sender];
-        require(sender.allocatedVotes[0] != 0, "Has no right to vote");
-        require(!sender.voted[0], "Already voted.");
-        sender.voted[0] = true;
-        sender.lmipVotes = lmipVotes;
-        //
-        //
-        //TODO: apply appropriate votes to each proposal selected
-        //
-        //
+    // votes passed as [[proposal, numVotes], [proposal, numvotes]]
+    function storeCastVotes(uint[2][] memory lmipVotes, 
+                            uint[2][] memory maintenanceVotes, 
+                            uint[2][] memory pocVotes, 
+                            uint[2][] memory continuingVotes) external {
+                                
+        for (uint i = 0; i < totalVotes[Proposals.ProposalType.LMIP]; i++) {
+            if(lmipVotes[i][0] != 0) {
+                if(lmipVotesCast[lmipVotes[i][0]] == 0) {
+                    lmipProposalsVoted.push(lmipVotes[i][0]);
+                }
+                lmipVotesCast[lmipVotes[i][0]] += lmipVotes[i][1];
+            }
+        }
+        
+        for (uint i = 0; i < totalVotes[Proposals.ProposalType.Maintenance]; i++) {
+            if(maintenanceVotes[i][0] != 0) {
+                if(maintenanceVotesCast[lmipVotes[i][0]] == 0) {
+                    maintenanceProposalsVoted.push(maintenanceVotes[i][0]);
+                }
+                maintenanceVotesCast[maintenanceVotes[i][0]] += maintenanceVotes[i][1];
+            }
+        }
+        
+        for (uint i = 0; i < totalVotes[Proposals.ProposalType.POC]; i++) {
+            if(pocVotes[i][0] != 0) {
+                if(pocVotesCast[lmipVotes[i][0]] == 0) {
+                    pocProposalsVoted.push(pocVotes[i][0]);
+                }
+                pocVotesCast[pocVotes[i][0]] += pocVotes[i][1];
+            }
+        }
+        
+        for (uint i = 0; i < totalVotes[Proposals.ProposalType.Continuing]; i++) {
+            if(continuingVotes[i][0] != 0) {
+                if(continuingVotesCast[continuingVotes[i][0]] == 0) {
+                    continuingProposalsVoted.push(continuingVotes[i][0]);
+                }
+                continuingVotesCast[continuingVotes[i][0]] += continuingVotes[i][1];
+            }
+        }
     }
-    
-    function voteMaintenance(uint[] memory maintenanceVotes) public {
-        Voter storage sender = voters[msg.sender];
-        require(sender.allocatedVotes[1] != 0, "Has no right to vote");
-        require(!sender.voted[1], "Already voted.");
-        sender.voted[1] = true;
-        sender.maintenanceVotes = maintenanceVotes;
-        //
-        //
-        //TODO: apply appropriate votes to each proposal selected
-        //
-        //
-    }
-    
-    function votePOC(uint[] memory pocVotes) public {
-        Voter storage sender = voters[msg.sender];
-        require(sender.allocatedVotes[2] != 0, "Has no right to vote");
-        require(!sender.voted[2], "Already voted.");
-        sender.voted[2] = true;
-        sender.pocVotes = pocVotes;
-        //
-        //
-        //TODO: apply appropriate votes to each proposal selected
-        //
-        //
-    }
-    
-    function voteContinuing(uint[] memory continuingVotes) public {
-        Voter storage sender = voters[msg.sender];
-        require(sender.allocatedVotes[3] != 0, "Has no right to vote");
-        require(!sender.voted[3], "Already voted.");
-        sender.voted[3] = true;
-        sender.continuingVotes = continuingVotes;
-        //
-        //
-        //TODO: apply appropriate votes to each proposal selected
-        //
-        //
-    }
-*/
 }
-
-
-
-
-
-
-
-
-

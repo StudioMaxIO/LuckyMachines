@@ -2,6 +2,8 @@
 
 pragma solidity >=0.6.0;
 
+import "./Ballot.sol";
+
 contract Proposals {
     struct Proposal {
         uint id;
@@ -17,27 +19,27 @@ contract Proposals {
         Approval ballotApproval;
         Approval result;
     }
-
+    
     uint currentID;
-
+    
     enum ProposalType { LMIP, Maintenance, POC, Continuing }
     enum Approval { Pending, Approved, Rejected }
-
+    
     mapping(address => Proposal[]) public lmipProposals;
     mapping(address => Proposal[]) public maintenanceProposals;
     mapping(address => Proposal[]) public pocProposals;
     mapping(address => Proposal[]) public continuingProposals;
-
-    mapping(address => mapping(uint => Proposal)) public proposals;
-
+    
+    mapping(address => mapping(uint => Proposal)) public proposals; //proposals[ballot][propID]
+    
     constructor() {
         currentID = 0;
     }
-
-    function addProposal(string memory name,
+    
+    function addProposal(string memory name, 
                     string memory summary,
-                    uint256 fileHash,
-                    string memory fileURI,
+                    uint256 fileHash, 
+                    string memory fileURI, 
                     uint fundingRequest,
                     address payable recipient,
                     ProposalType proposalType,
@@ -57,45 +59,28 @@ contract Proposals {
                             ballotApproval: Approval.Pending,
                             result: Approval.Pending
         });
-
+        
         proposals[ballot][currentID] = prop;
-
+        
         if (proposalType == ProposalType.LMIP) {
-            addLMIPProposal(prop, ballot);
+            lmipProposals[ballot].push(prop);
         } else if (proposalType == ProposalType.POC) {
-            addPOCProposal(prop, ballot);
+            pocProposals[ballot].push(prop);
         } else if (proposalType == ProposalType.Maintenance) {
-            addMaintencanceProposal(prop, ballot);
+            maintenanceProposals[ballot].push(prop);
         } else if (proposalType == ProposalType.Continuing) {
-            addContinuingProposal(prop, ballot);
+            continuingProposals[ballot].push(prop);
         }
-
     }
-
-    function addLMIPProposal(Proposal memory proposal, address ballot) internal {
-        lmipProposals[ballot].push(proposal);
-    }
-
-    function addMaintencanceProposal(Proposal memory proposal, address ballot) internal {
-        maintenanceProposals[ballot].push(proposal);
-    }
-
-    function addPOCProposal(Proposal memory proposal, address ballot) internal {
-        pocProposals[ballot].push(proposal);
-    }
-
-    function addContinuingProposal(Proposal memory proposal, address ballot) internal {
-        continuingProposals[ballot].push(proposal);
-    }
-
+    
     function getProposals(address ballot) public view returns (Proposal[][4] memory){
         return [lmipProposals[ballot], maintenanceProposals[ballot], pocProposals[ballot], continuingProposals[ballot]];
     }
-
+    
     function getLMIPProposals(address ballot) public view returns (Proposal[] memory){
         return lmipProposals[ballot];
     }
-
+    
     function getMaintenanceProposals(address ballot) public view returns (Proposal[] memory){
         return maintenanceProposals[ballot];
     }
@@ -104,5 +89,22 @@ contract Proposals {
     }
     function getContinuingProposals(address ballot) public view returns (Proposal[] memory){
         return continuingProposals[ballot];
+    }
+    
+    function setApproval(Approval approval, address ballotAddress, uint proposalId, ProposalType proposalType) external {
+        require(Ballot(ballotAddress).votingStart() > block.timestamp, "approvals not allowed after vote start");
+        if (proposalType == ProposalType.LMIP) {
+            require(msg.sender == lmipProposals[ballotAddress][proposalId].ballot, "Only callable from ballot");
+            lmipProposals[ballotAddress][proposalId].ballotApproval = approval;
+        } else if (proposalType == ProposalType.POC) {
+            require(msg.sender == pocProposals[ballotAddress][proposalId].ballot, "Only callable from ballot");
+            pocProposals[ballotAddress][proposalId].ballotApproval = approval;
+        } else if (proposalType == ProposalType.Maintenance) {
+            require(msg.sender == maintenanceProposals[ballotAddress][proposalId].ballot, "Only callable from ballot");
+            maintenanceProposals[ballotAddress][proposalId].ballotApproval = approval;
+        } else if (proposalType == ProposalType.Continuing) {
+            require(msg.sender == continuingProposals[ballotAddress][proposalId].ballot, "Only callable from ballot");
+            continuingProposals[ballotAddress][proposalId].ballotApproval = approval;
+        }
     }
 }
