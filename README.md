@@ -6,9 +6,7 @@ Each machine must be funded with enough ETH/MATIC to pay out any potential winni
 
 Lucky Machines can be shut down at any time and all funds cashed out to the owner, although any unplayed bets cannot be withdrawn. Unplayed bets may be refunded to the player who placed the bet upon request to the contract.
 
-The minimum bet, maximum bet, number of pickable values, and payout amounts are set on a machine by machine basis, and can initially be customized to the owner's specification. Once the machine is created these values cannot be changed. All machine properties are easily inspectable through public variables in the machine contract or the operator interface at https://luckymachines.io/operate.
-
-On Polygon / Matic mainnet at https://luckymachines.io.
+The minimum bet, maximum bet, number of pickable values, and payout amounts are set on a machine by machine basis, and can initially be customized to the owner's specification. Once the machine is created these values cannot be changed. All machine properties are easily inspectable through public variables in the machine contract or the operator interface
 
 ### Use Lucky Machines to power your fair betting games
 Install Contracts / ABIs:
